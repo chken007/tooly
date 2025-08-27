@@ -21,7 +21,15 @@ function App() {
         <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900 font-mono">Tooly</h1>
+              {/* Logo */}
+              <div className="flex items-center mr-4">
+                <img 
+                  src="/tooly-icon.svg" 
+                  alt="Tooly Logo" 
+                  className="w-8 h-8 mr-3"
+                />
+                <h1 className="text-2xl font-bold text-gray-900 font-mono">Tooly</h1>
+              </div>
               <span className="ml-3 text-sm text-gray-600 font-medium">🔧 Simple tools for everyday coding</span>
             </div>
           </div>
