@@ -1,9 +1,6 @@
 # Dependencies
 node_modules/
 
-# Development files
-src/
-
 # Config files
 .env
 .env.local
