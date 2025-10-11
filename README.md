@@ -47,7 +47,7 @@ Comprehensive timestamp conversion tool:
 
 1. Clone the repository:
 ```bash
-git clone https://git.corp.adobe.com/hengcui/tooly.git
+git clone https://github.com/chken007/tooly.git
 cd tooly
 ```
 
@@ -139,7 +139,7 @@ We welcome contributions! Please feel free to submit issues and pull requests.
 
 ## 📧 Feedback
 
-Have feedback or suggestions? Send us an email at [hengcui@adobe.com](mailto:hengcui@adobe.com)
+Have feedback or suggestions? Open an issue on [GitHub](https://github.com/chken007/tooly/issues)
 
 ## 📄 License
 
@@ -152,6 +152,26 @@ npm run build
 ```
 
 This builds the app for production to the `build` folder. The build is minified and optimized for best performance.
+
+## 🚀 Deployment
+
+### Quick Deploy Script
+```bash
+./deploy.sh [platform]
+```
+
+Supported platforms:
+- `vercel` - Deploy to Vercel (recommended)
+- `netlify` - Deploy to Netlify
+- `github-pages` - Deploy to GitHub Pages
+
+### Manual Deployment
+1. Run `npm run build`
+2. Deploy the `build` folder to your preferred hosting service:
+   - **Vercel**: `vercel --prod`
+   - **Netlify**: Drag and drop the `build` folder
+   - **GitHub Pages**: `gh-pages -d build`
+   - **Any static host**: Upload `build` contents to web root
 
 ---
 

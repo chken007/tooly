@@ -1,17 +1,18 @@
 {
   "name": "tooly",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "description": "Simple tools for everyday coding - A collection of essential developer utilities",
+  "private": false,
   "dependencies": {
     "@types/diff": "^7.0.2",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^16.18.126",
-    "@types/react": "^19.1.6",
-    "@types/react-dom": "^19.1.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "diff": "^8.0.2",
     "js-yaml": "^4.1.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "react-scripts": "5.0.1",
     "typescript": "^4.9.5"
   },
@@ -38,6 +39,27 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "keywords": [
+    "developer-tools",
+    "base64",
+    "jwt",
+    "diff",
+    "time-converter",
+    "list-processing",
+    "react",
+    "typescript",
+    "utilities"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "homepage": "https://github.com/chken007/tooly#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chken007/tooly.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chken007/tooly/issues"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",

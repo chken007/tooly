@@ -69,12 +69,14 @@ function App() {
       <footer className="bg-white border-t border-gray-200 mt-8">
         <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="text-center text-sm text-gray-500">
-            Have feedback? Send us an email at{' '}
+            Have feedback? Open an issue on{' '}
             <a 
-              href="mailto:hengcui@adobe.com" 
+              href="https://github.com/chken007/tooly/issues" 
               className="text-blue-600 hover:text-blue-800 transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              hengcui@adobe.com
+              GitHub
             </a>
           </div>
         </div>
