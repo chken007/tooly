@@ -6,13 +6,32 @@ interface DiffPart {
   value: string;
 }
 
-const TextDiffTool: React.FC = () => {
-  const [leftText, setLeftText] = useState('');
-  const [rightText, setRightText] = useState('');
+interface TextDiffToolProps {
+  state: {
+    leftText: string;
+    rightText: string;
+    diffMode: 'chars' | 'lines';
+  };
+  setState: React.Dispatch<React.SetStateAction<{
+    leftText: string;
+    rightText: string;
+    diffMode: 'chars' | 'lines';
+  }>>;
+}
+
+const TextDiffTool: React.FC<TextDiffToolProps> = ({ state, setState }) => {
+  // Destructure state from props
+  const { leftText, rightText, diffMode } = state;
+  
+  // Helper functions to update specific parts of state
+  const setLeftText = (value: string) => setState(prev => ({ ...prev, leftText: value }));
+  const setRightText = (value: string) => setState(prev => ({ ...prev, rightText: value }));
+  const setDiffMode = (value: 'chars' | 'lines') => setState(prev => ({ ...prev, diffMode: value }));
+  
+  // Local state (not persisted across tabs)
   const [diffParts, setDiffParts] = useState<DiffPart[]>([]);
   const [showDiff, setShowDiff] = useState(false);
   const [showUnified, setShowUnified] = useState(false);
-  const [diffMode, setDiffMode] = useState<'chars' | 'lines'>('lines');
   const [stats, setStats] = useState({ added: 0, removed: 0, unchanged: 0 });
 
   const processDiff = (leftText: string, rightText: string) => {
@@ -71,17 +90,6 @@ const TextDiffTool: React.FC = () => {
     setShowDiff(false);
     setShowUnified(false);
     setStats({ added: 0, removed: 0, unchanged: 0 });
-  };
-
-  const handleSwitch = () => {
-    const temp = leftText;
-    setLeftText(rightText);
-    setRightText(temp);
-    
-    // Re-run comparison if it was already shown
-    if (showDiff) {
-      processDiff(rightText, temp);
-    }
   };
 
   const handleDiffModeChange = (newMode: 'chars' | 'lines') => {
@@ -319,12 +327,6 @@ const TextDiffTool: React.FC = () => {
           className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
         >
           Compare
-        </button>
-        <button
-          onClick={handleSwitch}
-          className="px-4 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors text-sm font-medium"
-        >
-          Switch
         </button>
         <button
           onClick={handleClear}

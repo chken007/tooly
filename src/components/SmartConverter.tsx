@@ -2,18 +2,42 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 type EncodingType = 'base64' | 'url' | 'jwt' | 'hex' | 'unicode';
 
+interface SmartConverterProps {
+  state: {
+    leftText: string;
+    rightText: string;
+    encodingType: EncodingType;
+    isHighlightMode: boolean;
+    isSorted: boolean;
+    isBeautified: boolean;
+  };
+  setState: React.Dispatch<React.SetStateAction<{
+    leftText: string;
+    rightText: string;
+    encodingType: EncodingType;
+    isHighlightMode: boolean;
+    isSorted: boolean;
+    isBeautified: boolean;
+  }>>;
+}
 
-
-const SmartConverter: React.FC = () => {
-  const [leftText, setLeftText] = useState('');
-  const [rightText, setRightText] = useState('');
-  const [encodingType, setEncodingType] = useState<EncodingType>('base64');
+const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
+  // Destructure state from props
+  const { leftText, rightText, encodingType, isHighlightMode, isSorted, isBeautified } = state;
+  
+  // Helper functions to update specific parts of state
+  const setLeftText = (value: string) => setState(prev => ({ ...prev, leftText: value }));
+  const setRightText = (value: string) => setState(prev => ({ ...prev, rightText: value }));
+  const setEncodingType = (value: EncodingType) => setState(prev => ({ ...prev, encodingType: value }));
+  const setIsHighlightMode = (value: boolean) => setState(prev => ({ ...prev, isHighlightMode: value }));
+  const setIsSorted = (value: boolean) => setState(prev => ({ ...prev, isSorted: value }));
+  const setIsBeautified = (value: boolean) => setState(prev => ({ ...prev, isBeautified: value }));
+  
+  // Local state (not persisted across tabs)
   const [error, setError] = useState('');
   const [lastModified, setLastModified] = useState<'left' | 'right' | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<'left' | 'right' | null>(null);
-  const [showSyntaxHighlight, setShowSyntaxHighlight] = useState(false);
   const [collapsedPaths, setCollapsedPaths] = useState<Set<string>>(new Set());
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
 
   // Robust Base64 decoder that can handle partial invalid strings
@@ -174,6 +198,55 @@ const SmartConverter: React.FC = () => {
     }
   }, []);
 
+  // JSON Sort function - recursively sorts all object keys (case-sensitive, standard behavior)
+  const sortJSON = useCallback((obj: any): any => {
+    if (obj === null || obj === undefined) {
+      return obj;
+    }
+
+    // Handle arrays - recursively sort contents
+    if (Array.isArray(obj)) {
+      return obj.map(item => sortJSON(item));
+    }
+
+    // Handle objects - sort keys alphabetically (case-sensitive like standard libraries)
+    if (typeof obj === 'object') {
+      const sortedObj: any = {};
+      const keys = Object.keys(obj).sort();
+      
+      keys.forEach(key => {
+        sortedObj[key] = sortJSON(obj[key]);
+      });
+      
+      return sortedObj;
+    }
+
+    // Primitive values - return as is
+    return obj;
+  }, []);
+
+  const handleSort = useCallback(() => {
+    if (!rightText.trim()) {
+      setError('No content to sort');
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(rightText.trim());
+      const sorted = sortJSON(parsed);
+      const formatted = JSON.stringify(sorted, null, 2);
+      
+      setRightText(formatted);
+      setError('');
+      setIsSorted(true);
+      setIsBeautified(true);
+      setIsHighlightMode(false); // Exit highlight mode
+      setLastModified('right');
+    } catch (err) {
+      setError('Cannot sort: Invalid JSON format');
+    }
+  }, [rightText, sortJSON]);
+
   const handleBeautify = useCallback(() => {
     if (!rightText.trim()) {
       setError('No content to beautify');
@@ -183,27 +256,26 @@ const SmartConverter: React.FC = () => {
     try {
       const trimmed = rightText.trim();
       let beautified = trimmed;
+      let needsFormatting = true;
       
       // Check if content is already properly beautified JSON
       const isAlreadyBeautifiedJSON = (() => {
         try {
-          JSON.parse(trimmed);
-          // Check for proper JSON formatting (has newlines and indentation)
-          return trimmed.includes('\n') && trimmed.includes('  ');
+          const parsed = JSON.parse(trimmed);
+          const standardFormat = JSON.stringify(parsed, null, 2);
+          // Compare with standard format - must match exactly
+          return trimmed === standardFormat;
         } catch {
           return false;
         }
       })();
 
       if (isAlreadyBeautifiedJSON) {
-        // Content is already beautified, just enable syntax highlighting
-        setError('');
-        setShowSyntaxHighlight(true);
-        return;
-      }
-      
-      // Enhanced robust JSON beautification
-      if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        // Content is already beautified in standard format
+        needsFormatting = false;
+        beautified = trimmed;
+      } else if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        // Enhanced robust JSON beautification
         // Try standard JSON first
         try {
           const parsed = JSON.parse(trimmed);
@@ -290,15 +362,21 @@ const SmartConverter: React.FC = () => {
         }
       }
       
-      if (beautified !== trimmed) {
-        setLastModified(null);
+      // Always update state when Beautify is clicked
+      if (needsFormatting && beautified !== trimmed) {
+        // Content was formatted
         setRightText(beautified);
-      setError('');
-        // Enable syntax highlighting after successful beautification
-        if (beautified.trim().startsWith('{') || beautified.trim().startsWith('[')) {
-          setShowSyntaxHighlight(true);
-        }
+        setError('');
+        setIsBeautified(true);
+        setIsHighlightMode(false);
+        setLastModified('right');
+      } else if (!needsFormatting) {
+        // Content was already beautified, just update the button state
+        setError('');
+        setIsBeautified(true);
+        setIsHighlightMode(false);
       } else {
+        // Could not beautify
         setError('Content could not be beautified');
       }
       
@@ -378,6 +456,7 @@ const SmartConverter: React.FC = () => {
               toggleCollapse(path, obj);
             }}
             className="inline-flex items-center justify-center w-4 h-4 mr-1 text-white bg-orange-400 hover:bg-orange-500 rounded-full text-xs font-bold transition-colors"
+            style={{ pointerEvents: 'auto' }}
             title={isCollapsed ? "Expand" : "Collapse"}
           >
             {isCollapsed ? '+' : '−'}
@@ -419,6 +498,7 @@ const SmartConverter: React.FC = () => {
               toggleCollapse(path, obj);
             }}
             className="inline-flex items-center justify-center w-4 h-4 mr-1 text-white bg-orange-400 hover:bg-orange-500 rounded-full text-xs font-bold transition-colors"
+            style={{ pointerEvents: 'auto' }}
             title={isCollapsed ? "Expand" : "Collapse"}
           >
             {isCollapsed ? '+' : '−'}
@@ -509,15 +589,7 @@ const SmartConverter: React.FC = () => {
     }
   }, [renderCollapsibleJSON]);
 
-  // Sync scroll between textarea and highlight background
-  const handleScroll = useCallback(() => {
-    if (highlightRef.current && textareaRef.current) {
-      highlightRef.current.scrollTop = textareaRef.current.scrollTop;
-      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
-    }
-  }, []);
-
-  // Convert based on which panel was last modified
+  // Toggle Highlight mode
   useEffect(() => {
     if (lastModified === 'left' && leftText.trim()) {
       // Decode from left (encoded) to right (plain)
@@ -597,9 +669,15 @@ const SmartConverter: React.FC = () => {
   const handleRightTextChange = (value: string) => {
     setRightText(value);
     setLastModified('right');
-    // Reset syntax highlighting when content changes
-    if (showSyntaxHighlight) {
-      setShowSyntaxHighlight(false);
+    // Reset all states when content changes
+    if (isHighlightMode) {
+      setIsHighlightMode(false);
+    }
+    if (isSorted) {
+      setIsSorted(false);
+    }
+    if (isBeautified) {
+      setIsBeautified(false);
     }
   };
 
@@ -632,9 +710,12 @@ const SmartConverter: React.FC = () => {
 
   const handleClearRight = () => {
     setRightText('');
+    setLeftText(''); // Also clear left text
+    setError('');
     setLastModified('right');
-    // Reset syntax highlighting when clearing content
-    setShowSyntaxHighlight(false);
+    setIsHighlightMode(false);
+    setIsSorted(false);
+    setIsBeautified(false);
   };
 
   const getEncodingLabel = () => {
@@ -659,23 +740,31 @@ const SmartConverter: React.FC = () => {
     }
   };
 
-  // Check if content is already beautified
-  const isContentBeautified = useCallback(() => {
-    if (!rightText.trim()) return false;
-    try {
-      JSON.parse(rightText.trim());
-      return rightText.includes('\n') && rightText.includes('  ');
-    } catch {
-      return false;
-    }
-  }, [rightText]);
-
   const getBeautifyButtonText = () => {
-    if (showSyntaxHighlight && isContentBeautified()) {
+    if (isBeautified) {
       return '✨ Beautified';
     }
     return 'Beautify';
   };
+
+  // Toggle Highlight mode
+  const handleHighlight = useCallback(() => {
+    if (!rightText.trim()) {
+      setError('No content to highlight');
+      return;
+    }
+
+    // Check if content is valid JSON
+    try {
+      JSON.parse(rightText.trim());
+      setIsHighlightMode(!isHighlightMode);
+      setError('');
+    } catch {
+      setError('Cannot highlight: Invalid JSON format');
+    }
+  }, [rightText, isHighlightMode]);
+
+  // Convert based on which panel was last modified
 
   // Expand all JSON nodes
   const expandAll = useCallback(() => {
@@ -764,8 +853,6 @@ const SmartConverter: React.FC = () => {
             onChange={(e) => handleLeftTextChange(e.target.value)}
             className="w-full h-[900px] p-4 border border-stone-200 rounded-xl focus:ring-2 focus:ring-orange-400/50 focus:border-orange-400 resize-none font-mono text-sm transition-all duration-200"
             placeholder={getPlaceholder()}
-            ref={textareaRef}
-            onScroll={handleScroll}
         />
       </div>
 
@@ -836,7 +923,22 @@ const SmartConverter: React.FC = () => {
               {encodingType === 'jwt' ? 'Decoded JWT' : 'Plain Text'}
             </label>
             <div className="flex space-x-2">
-              {showSyntaxHighlight && hasCollapsibleContent() && (
+              {/* Show Highlight/Edit button */}
+              <button
+                onClick={handleHighlight}
+                className={`text-sm transition-colors px-3 py-1 rounded ${
+                  isHighlightMode 
+                    ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                    : 'text-stone-500 hover:text-stone-700 hover:bg-stone-100'
+                }`}
+                disabled={!rightText}
+                title={isHighlightMode ? "Exit highlight mode to edit" : "Enable syntax highlighting"}
+              >
+                {isHighlightMode ? '✏️ Edit' : 'Highlight'}
+              </button>
+              
+              {/* Show +All/-All only in Highlight mode */}
+              {isHighlightMode && hasCollapsibleContent() && (
                 <>
                   <button
                     onClick={collapseAll}
@@ -854,14 +956,29 @@ const SmartConverter: React.FC = () => {
                   </button>
                 </>
               )}
+              
+              {/* Show Sort/Beautify only when NOT in Highlight mode */}
+              {!isHighlightMode && (
+                <>
+                  <button
+                    onClick={handleSort}
+                    className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
+                    disabled={!rightText}
+                    title="Sort JSON keys alphabetically"
+                  >
+                    {isSorted ? '✨ Sorted' : 'Sort'}
+                  </button>
+                  <button
+                    onClick={handleBeautify}
+                    className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
+                    disabled={!rightText}
+                  >
+                    {getBeautifyButtonText()}
+              </button>
+                </>
+              )}
+              
               <button
-                onClick={handleBeautify}
-                className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
-                disabled={!rightText}
-              >
-                {getBeautifyButtonText()}
-        </button>
-        <button
                 onClick={handleCopyRight}
                 className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
                 disabled={!rightText}
@@ -877,37 +994,27 @@ const SmartConverter: React.FC = () => {
       </div>
           </div>
 
-          {/* Single textarea with optional syntax highlighting background */}
+          {/* Conditional rendering: Highlight mode OR Editable textarea */}
           <div className="relative">
-            {/* Syntax highlighted background - only show when enabled and content is JSON */}
-            {showSyntaxHighlight && rightText && (rightText.trim().startsWith('{') || rightText.trim().startsWith('[')) && (
+            {isHighlightMode ? (
+              /* Highlight Mode: Read-only, collapsible, syntax highlighted */
               <div 
-                className="absolute inset-0 w-full h-[900px] p-4 border border-stone-200 rounded-lg font-mono text-sm overflow-auto z-20 whitespace-pre-wrap break-words"
-                style={{ scrollBehavior: 'auto', pointerEvents: 'auto' }}
+                className="w-full h-[900px] p-4 border border-stone-200 rounded-xl font-mono text-sm overflow-auto bg-white"
                 ref={highlightRef}
               >
                 {highlightJSON(rightText)}
               </div>
+            ) : (
+              /* Edit Mode: Editable textarea */
+              <textarea
+                id="plain-text"
+                value={rightText}
+                onChange={(e) => handleRightTextChange(e.target.value)}
+                className="w-full h-[900px] p-4 border border-stone-200 rounded-xl focus:ring-2 focus:ring-orange-400/50 focus:border-orange-400 resize-none font-mono text-sm transition-all duration-200 bg-white text-stone-900"
+                placeholder={encodingType === 'jwt' ? 'Decoded JWT will appear here...' : 'Plain text will appear here...'}
+                readOnly={encodingType === 'jwt'}
+              />
             )}
-            
-            {/* Editable textarea */}
-        <textarea
-              id="plain-text"
-              value={rightText}
-              onChange={(e) => handleRightTextChange(e.target.value)}
-              onScroll={handleScroll}
-              ref={textareaRef}
-              className={`relative z-10 w-full h-[900px] p-4 border border-stone-200 rounded-xl focus:ring-2 focus:ring-orange-400/50 focus:border-orange-400 resize-none font-mono text-sm transition-all duration-200 ${
-                showSyntaxHighlight && rightText && (rightText.trim().startsWith('{') || rightText.trim().startsWith('[')) 
-                  ? 'bg-transparent text-transparent caret-gray-800' 
-                  : 'bg-white text-stone-900'
-              }`}
-              placeholder={encodingType === 'jwt' ? 'Decoded JWT will appear here...' : 'Plain text will appear here...'}
-              readOnly={encodingType === 'jwt'}
-              style={{
-                ...(showSyntaxHighlight && rightText && (rightText.trim().startsWith('{') || rightText.trim().startsWith('[')) ? { caretColor: '#1f2937', pointerEvents: 'none' } : {}),
-              }}
-            />
           </div>
         </div>
       </div>
@@ -920,10 +1027,10 @@ const SmartConverter: React.FC = () => {
       )}
 
       {/* Info */}
-      <div className="mt-6 text-xs text-stone-500 text-center">
+      <div className="mt-6 text-sm text-stone-600 text-center font-medium bg-orange-50 p-3 rounded-lg border border-orange-100">
         {encodingType === 'jwt' 
-          ? 'JWT tokens can only be decoded. Enter a JWT token on the left to see its decoded content.'
-          : 'Type in either panel to automatically convert. Both panels are editable.'
+          ? '💡 JWT tokens can only be decoded. Enter a JWT token on the left to see its decoded content.'
+          : '💡 Type in either panel to automatically convert. Both panels are editable.'
         }
       </div>
     </div>

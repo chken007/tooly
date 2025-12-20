@@ -1,8 +1,25 @@
 import React, { useState } from 'react';
 
-const ListWizard: React.FC = () => {
-  const [listA, setListA] = useState('');
-  const [listB, setListB] = useState('');
+interface ListWizardProps {
+  state: {
+    listA: string;
+    listB: string;
+  };
+  setState: React.Dispatch<React.SetStateAction<{
+    listA: string;
+    listB: string;
+  }>>;
+}
+
+const ListWizard: React.FC<ListWizardProps> = ({ state, setState }) => {
+  // Destructure state from props
+  const { listA, listB } = state;
+  
+  // Helper functions to update specific parts of state
+  const setListA = (value: string) => setState(prev => ({ ...prev, listA: value }));
+  const setListB = (value: string) => setState(prev => ({ ...prev, listB: value }));
+  
+  // Local state (not persisted across tabs)
   const [results, setResults] = useState({
     intersection: [] as string[],
     union: [] as string[],
@@ -76,17 +93,6 @@ const ListWizard: React.FC = () => {
       symmetricDiff: []
     });
     setShowResults(false);
-  };
-
-  const handleSwitch = () => {
-    const temp = listA;
-    setListA(listB);
-    setListB(temp);
-    
-    // Re-run operations if results were shown
-    if (showResults) {
-      setTimeout(() => performOperations(), 0);
-    }
   };
 
   const copyToClipboard = async (items: string[]) => {
@@ -207,12 +213,6 @@ const ListWizard: React.FC = () => {
           className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
         >
           Process
-        </button>
-        <button
-          onClick={handleSwitch}
-          className="px-4 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors text-sm font-medium"
-        >
-          Switch
         </button>
         <button
           onClick={handleClear}

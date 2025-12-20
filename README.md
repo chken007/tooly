@@ -13,7 +13,9 @@ Advanced encoding and decoding tool supporting multiple formats:
 - **JWT** - JWT token decoding (shows header, payload, and signature)
 - **Hex/ASCII** - Hexadecimal and ASCII conversion
 - **Unicode Escape** - Unicode escape sequence conversion
-- **Beautify** - JSON, XML, CSS, SQL, and YAML formatting with syntax validation
+- **JSON Beautify** - Format JSON with proper indentation and structure
+- **JSON Sort** - Alphabetically sort JSON keys (case-sensitive)
+- **Syntax Highlighting** - Collapsible JSON viewer with color-coded syntax
 
 ### 📊 Diff Master
 Professional text comparison tool:
@@ -151,7 +153,9 @@ tooly/
 ### Smart Converter
 - **Base64**: Encode/decode text, handles malformed input gracefully
 - **JWT**: Paste a JWT token to see decoded header and payload
-- **Beautify**: Paste minified JSON/XML to format it beautifully
+- **Beautify**: Format minified JSON with proper indentation
+- **Sort**: Alphabetically sort all JSON keys recursively
+- **Highlight**: Interactive JSON viewer with collapsible nodes and syntax highlighting
 
 ### Time Converter
 - **Single Timestamp**: `1640995200` (automatically detects format)
@@ -170,7 +174,7 @@ tooly/
 ## 🎨 Design Features
 
 - **Responsive Design** - Works perfectly on desktop and mobile
-- **Dark/Light Theme Support** - Clean, modern interface
+- **Modern UI** - Clean interface with custom fonts (Plus Jakarta Sans, JetBrains Mono)
 - **Optimized for Large Displays** - Maximum width of 2000px for 2K/4K monitors
 - **Consistent UI** - Uniform design language across all tools
 - **Professional UX** - Inspired by tools like Postman and VS Code

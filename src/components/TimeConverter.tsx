@@ -20,11 +20,34 @@ const TIMEZONES: TimezoneInfo[] = [
   { name: 'AEDT/AEST', timezone: 'Australia/Sydney', label: 'Australian Eastern Time', location: 'Australia (Sydney, Melbourne)' },
 ];
 
-const TimeConverter: React.FC = () => {
-  const [input, setInput] = useState('');
+interface TimeConverterProps {
+  state: {
+    input: string;
+    selectedTimezones: string[];
+  };
+  setState: React.Dispatch<React.SetStateAction<{
+    input: string;
+    selectedTimezones: string[];
+  }>>;
+}
+
+const TimeConverter: React.FC<TimeConverterProps> = ({ state, setState }) => {
+  // Destructure state from props
+  const { input, selectedTimezones } = state;
+  
+  // Helper functions to update specific parts of state
+  const setInput = (value: string) => setState(prev => ({ ...prev, input: value }));
+  const setSelectedTimezones = (value: string[] | ((prev: string[]) => string[])) => {
+    if (typeof value === 'function') {
+      setState(prev => ({ ...prev, selectedTimezones: value(prev.selectedTimezones) }));
+    } else {
+      setState(prev => ({ ...prev, selectedTimezones: value }));
+    }
+  };
+  
+  // Local state (not persisted across tabs)
   const [conversions, setConversions] = useState<{ [key: string]: string }>({});
   const [copyFeedback, setCopyFeedback] = useState<string>('');
-  const [selectedTimezones, setSelectedTimezones] = useState<string[]>(['UTC', 'PST/PDT']);
 
   const detectAndConvertEpoch = useCallback((epochStr: string) => {
     if (!epochStr.trim()) {

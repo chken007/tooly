@@ -6,15 +6,46 @@ import ListWizard from './components/ListWizard';
 import TimeConverter from './components/TimeConverter';
 import About from './components/About';
 
+type EncodingType = 'base64' | 'url' | 'jwt' | 'hex' | 'unicode';
+
 function AppContent() {
   const [activeTab, setActiveTab] = useState('converter');
   const location = useLocation();
 
+  // SmartConverter state
+  const [converterState, setConverterState] = useState({
+    leftText: '',
+    rightText: '',
+    encodingType: 'base64' as EncodingType,
+    isHighlightMode: false,
+    isSorted: false,
+    isBeautified: false,
+  });
+
+  // TextDiffTool state
+  const [diffState, setDiffState] = useState({
+    leftText: '',
+    rightText: '',
+    diffMode: 'lines' as 'chars' | 'lines',
+  });
+
+  // ListWizard state
+  const [wizardState, setWizardState] = useState({
+    listA: '',
+    listB: '',
+  });
+
+  // TimeConverter state
+  const [timeState, setTimeState] = useState({
+    input: '',
+    selectedTimezones: ['UTC', 'PST/PDT'] as string[],
+  });
+
   const tabs = [
-    { id: 'converter', label: 'Smart Converter', component: SmartConverter },
-    { id: 'diff', label: 'Diff Master', component: TextDiffTool },
-    { id: 'wizard', label: 'List Wizard', component: ListWizard },
-    { id: 'time', label: 'Time Converter', component: TimeConverter }
+    { id: 'converter', label: 'Smart Converter' },
+    { id: 'diff', label: 'Diff Master' },
+    { id: 'wizard', label: 'List Wizard' },
+    { id: 'time', label: 'Time Converter' }
   ];
 
   // If we're on the about page, don't show the main app layout
@@ -75,10 +106,18 @@ function AppContent() {
 
       {/* Main Content */}
       <main className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {tabs.map((tab) => {
-          const Component = tab.component;
-          return activeTab === tab.id ? <Component key={tab.id} /> : null;
-        })}
+        {activeTab === 'converter' && (
+          <SmartConverter state={converterState} setState={setConverterState} />
+        )}
+        {activeTab === 'diff' && (
+          <TextDiffTool state={diffState} setState={setDiffState} />
+        )}
+        {activeTab === 'wizard' && (
+          <ListWizard state={wizardState} setState={setWizardState} />
+        )}
+        {activeTab === 'time' && (
+          <TimeConverter state={timeState} setState={setTimeState} />
+        )}
       </main>
 
       {/* Footer */}
