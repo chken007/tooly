@@ -4,24 +4,27 @@ interface TimezoneInfo {
   name: string;
   timezone: string;
   label: string;
+  location: string;
 }
 
 const TIMEZONES: TimezoneInfo[] = [
-  { name: 'PST/PDT', timezone: 'America/Los_Angeles', label: 'Pacific Time' },
-  { name: 'UTC', timezone: 'UTC', label: 'Coordinated Universal Time' },
-  { name: 'IST', timezone: 'Asia/Kolkata', label: 'India Standard Time' },
-  { name: 'EST/EDT', timezone: 'America/New_York', label: 'Eastern Time' },
-  { name: 'CST', timezone: 'Asia/Shanghai', label: 'China Standard Time' },
-  { name: 'JST', timezone: 'Asia/Tokyo', label: 'Japan Standard Time' },
-  { name: 'GMT', timezone: 'Europe/London', label: 'Greenwich Mean Time' },
-  { name: 'CET', timezone: 'Europe/Paris', label: 'Central European Time' },
+  { name: 'UTC', timezone: 'UTC', label: 'Coordinated Universal Time', location: 'Universal' },
+  { name: 'PST/PDT', timezone: 'America/Los_Angeles', label: 'Pacific Time', location: 'US West Coast (LA, SF, Seattle)' },
+  { name: 'EST/EDT', timezone: 'America/New_York', label: 'Eastern Time', location: 'US East Coast (NYC, DC, Boston)' },
+  { name: 'CST', timezone: 'Asia/Shanghai', label: 'China Standard Time', location: 'Beijing Time (China, HK, Taiwan)' },
+  { name: 'IST', timezone: 'Asia/Kolkata', label: 'India Standard Time', location: 'India (Delhi, Mumbai)' },
+  { name: 'JST', timezone: 'Asia/Tokyo', label: 'Japan Standard Time', location: 'Japan (Tokyo, Osaka)' },
+  { name: 'SGT', timezone: 'Asia/Singapore', label: 'Singapore Time', location: 'Singapore' },
+  { name: 'GMT', timezone: 'Europe/London', label: 'Greenwich Mean Time', location: 'UK (London)' },
+  { name: 'CET', timezone: 'Europe/Paris', label: 'Central European Time', location: 'Central Europe (Paris, Berlin, Rome)' },
+  { name: 'AEDT/AEST', timezone: 'Australia/Sydney', label: 'Australian Eastern Time', location: 'Australia (Sydney, Melbourne)' },
 ];
 
 const TimeConverter: React.FC = () => {
   const [input, setInput] = useState('');
   const [conversions, setConversions] = useState<{ [key: string]: string }>({});
   const [copyFeedback, setCopyFeedback] = useState<string>('');
-  const [selectedTimezones, setSelectedTimezones] = useState<string[]>(['PST/PDT', 'UTC']);
+  const [selectedTimezones, setSelectedTimezones] = useState<string[]>(['UTC', 'PST/PDT']);
 
   const detectAndConvertEpoch = useCallback((epochStr: string) => {
     if (!epochStr.trim()) {
@@ -128,7 +131,7 @@ const TimeConverter: React.FC = () => {
   const renderLineNumbers = () => {
     const lineCount = getLineCount();
     return Array.from({ length: lineCount }, (_, i) => (
-      <div key={i} className="text-xs text-gray-400 text-right py-0.5 h-6 leading-6">
+      <div key={i} className="text-xs text-stone-400 text-right py-0.5 h-6 leading-6">
         {i + 1}
       </div>
     ));
@@ -144,15 +147,15 @@ const TimeConverter: React.FC = () => {
       case 'JST': return { text: 'text-pink-600', bg: 'bg-pink-50', circle: 'bg-pink-100 text-pink-700' };
       case 'GMT': return { text: 'text-indigo-600', bg: 'bg-indigo-50', circle: 'bg-indigo-100 text-indigo-700' };
       case 'CET': return { text: 'text-teal-600', bg: 'bg-teal-50', circle: 'bg-teal-100 text-teal-700' };
-      default: return { text: 'text-gray-600', bg: 'bg-gray-50', circle: 'bg-gray-100 text-gray-700' };
+      default: return { text: 'text-stone-600', bg: 'bg-stone-50', circle: 'bg-stone-100 text-stone-700' };
     }
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+    <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2 font-mono">Time Converter</h2>
-        <p className="text-gray-600">
+        <h2 className="text-xl font-semibold text-stone-900 mb-2 tracking-tight">Time Converter</h2>
+        <p className="text-stone-500 text-sm">
           Convert epoch timestamps to various timezones. Supports both seconds and milliseconds format.
         </p>
       </div>
@@ -161,27 +164,27 @@ const TimeConverter: React.FC = () => {
         {/* Input Panel */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-stone-700">
               Epoch Timestamp
             </label>
             <div className="flex gap-2">
               <button
                 onClick={getCurrentEpoch}
-                className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                className="px-3 py-1.5 text-sm font-medium bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg transition-colors"
               >
                 Now
               </button>
               <button
                 onClick={handleClear}
-                className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                className="px-3 py-1.5 text-sm font-medium bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg transition-colors"
               >
                 Clear
               </button>
             </div>
           </div>
           
-          <div className="flex border border-gray-300 rounded-lg overflow-hidden">
-            <div className="w-10 bg-gray-50 border-r border-gray-200 p-2 font-mono text-sm">
+          <div className="flex border border-stone-300 rounded-lg overflow-hidden">
+            <div className="w-10 bg-stone-50 border-r border-stone-200 p-2 font-mono text-sm">
               {renderLineNumbers()}
             </div>
             <textarea
@@ -195,22 +198,22 @@ Examples:
 Multiple timestamps (prefer new lines):
 1640995200
 1641081600"
-              className="flex-1 h-[480px] p-4 font-mono text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent border-none outline-none"
+              className="flex-1 h-[480px] p-4 font-mono text-sm resize-none focus:ring-2 focus:ring-orange-400 focus:border-transparent border-none outline-none"
               style={{ lineHeight: '1.5' }}
             />
           </div>
           
-          <div className="text-xs text-gray-500">
-            <p>• Automatically detects seconds vs milliseconds format</p>
-            <p>• Supports multiple timestamps separated by new lines or spaces (prefer new lines for better readability)</p>
-            <p>• Non-numeric characters are automatically filtered</p>
-          </div>
+          <ul className="text-xs text-stone-500 space-y-1 list-disc list-inside pl-1">
+            <li className="pl-1">Automatically detects seconds vs milliseconds format</li>
+            <li className="pl-1">Supports multiple timestamps separated by new lines or spaces (prefer new lines for better readability)</li>
+            <li className="pl-1">Non-numeric characters are automatically filtered</li>
+          </ul>
         </div>
 
         {/* Output Panel */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-stone-700">
               Converted Times
             </label>
             {copyFeedback && (
@@ -222,18 +225,19 @@ Multiple timestamps (prefer new lines):
 
           {/* Timezone Selector */}
           <div className="mb-4">
-            <label className="block text-xs font-medium text-gray-600 mb-2">
-              Select Timezones:
+            <label className="block text-sm font-medium text-stone-700 mb-2">
+              Select Timezones
             </label>
             <div className="flex flex-wrap gap-2">
               {TIMEZONES.map((tz) => (
                 <button
                   key={tz.name}
                   onClick={() => toggleTimezone(tz.name)}
-                  className={`px-3 py-1 text-xs rounded-lg border transition-colors ${
+                  title={`${tz.label} - ${tz.location}`}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${
                     selectedTimezones.includes(tz.name)
-                      ? 'bg-blue-100 border-blue-300 text-blue-700'
-                      : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                      ? 'bg-orange-500 border-orange-500 text-white'
+                      : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100'
                   }`}
                 >
                   {tz.name}
@@ -242,15 +246,15 @@ Multiple timestamps (prefer new lines):
             </div>
           </div>
 
-          <div className="h-[400px] overflow-y-auto space-y-2 p-3 bg-gray-50 rounded-lg border">
+          <div className="h-[400px] overflow-y-auto space-y-2 p-3 bg-stone-50 rounded-lg border">
             {Object.keys(conversions).length === 0 && !input.trim() && (
-              <div className="text-gray-500 text-sm italic">
+              <div className="text-stone-500 text-sm italic">
                 Enter an epoch timestamp to see conversions...
               </div>
             )}
 
             {selectedTimezones.length === 0 && input.trim() && (
-              <div className="text-gray-500 text-sm italic">
+              <div className="text-stone-500 text-sm italic">
                 Select at least one timezone to see conversions...
               </div>
             )}
@@ -281,12 +285,12 @@ Multiple timestamps (prefer new lines):
                           {cleanTimezone}
                         </span>
                         {timezoneInfo && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-stone-500">
                             ({timezoneInfo.label})
                           </span>
                         )}
                       </div>
-                      <div className={`font-mono text-xs ${isError ? 'text-red-600' : 'text-gray-700'}`}>
+                      <div className={`font-mono text-xs ${isError ? 'text-red-600' : 'text-stone-700'}`}>
                         {time}
                       </div>
                     </div>
@@ -295,7 +299,7 @@ Multiple timestamps (prefer new lines):
                   {!isError && (
                     <button
                       onClick={() => handleCopy(time, timezone)}
-                      className="opacity-0 group-hover:opacity-100 ml-2 px-2 py-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 rounded transition-all"
+                      className="opacity-0 group-hover:opacity-100 ml-2 px-2 py-1 text-xs bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-lg transition-all"
                       title={`Copy ${timezone} time`}
                     >
                       Copy

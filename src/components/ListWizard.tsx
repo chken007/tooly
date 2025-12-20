@@ -105,35 +105,35 @@ const ListWizard: React.FC = () => {
     icon: string;
     color: string;
   }> = ({ title, items, description, icon, color }) => (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white border border-stone-200 rounded-lg p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-lg">{icon}</span>
-          <h4 className="font-semibold text-gray-900">{title}</h4>
+          <h4 className="font-semibold text-stone-900">{title}</h4>
           <span className={`text-sm px-2 py-1 rounded-full ${color}`}>
             {items.length}
           </span>
         </div>
         <button
           onClick={() => copyToClipboard(items)}
-          className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
+          className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
           title="Copy to clipboard"
         >
-          📋 Copy
+          Copy
         </button>
       </div>
-      <p className="text-xs text-gray-600 mb-3">{description}</p>
-      <div className="min-h-[120px] max-h-[200px] overflow-y-auto bg-gray-50 rounded p-3 font-mono text-sm">
+      <p className="text-xs text-stone-600 mb-3">{description}</p>
+      <div className="min-h-[120px] max-h-[200px] overflow-y-auto bg-stone-50 rounded p-3 font-mono text-sm">
         {items.length > 0 ? (
           <div className="space-y-1">
             {items.map((item, index) => (
-              <div key={index} className="text-gray-800">
+              <div key={index} className="text-stone-800">
                 {item}
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-gray-500 italic text-center py-8">
+          <div className="text-stone-500 italic text-center py-8">
             No items
           </div>
         )}
@@ -142,81 +142,81 @@ const ListWizard: React.FC = () => {
   );
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6 tracking-tight">
-        🧙‍♂️ List Wizard
+    <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+      <h2 className="text-xl font-semibold text-stone-900 mb-6 tracking-tight">
+        List Wizard
       </h2>
       
       {/* Input Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label htmlFor="listA" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="listA" className="block text-sm font-medium text-stone-700">
               List A
             </label>
             <button
               onClick={() => copyToClipboard(parseList(listA))}
-              className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
+              className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
               title="Copy to clipboard"
             >
-              📋 Copy
+              Copy
             </button>
           </div>
           <textarea
             id="listA"
             value={listA}
             onChange={(e) => setListA(e.target.value)}
-            className="w-full h-[300px] p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm"
+            className="w-full h-[300px] p-4 border border-stone-200 rounded-xl focus:ring-2 focus:ring-orange-400/50 focus:border-orange-400 transition-all resize-none font-mono text-sm"
             placeholder="Enter items (one per line, or comma-separated)&#10;Example:&#10;item1&#10;item2&#10;item3"
           />
-          <div className="text-xs text-gray-500 mt-1">
+          <div className="text-xs text-stone-500 mt-1">
             {parseList(listA).length} unique items
           </div>
         </div>
         
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label htmlFor="listB" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="listB" className="block text-sm font-medium text-stone-700">
               List B
             </label>
             <button
               onClick={() => copyToClipboard(parseList(listB))}
-              className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
+              className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
               title="Copy to clipboard"
             >
-              📋 Copy
+              Copy
             </button>
           </div>
           <textarea
             id="listB"
             value={listB}
             onChange={(e) => setListB(e.target.value)}
-            className="w-full h-[300px] p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm"
+            className="w-full h-[300px] p-4 border border-stone-200 rounded-xl focus:ring-2 focus:ring-orange-400/50 focus:border-orange-400 transition-all resize-none font-mono text-sm"
             placeholder="Enter items (one per line, or comma-separated)&#10;Example:&#10;item2&#10;item4&#10;item5"
           />
-          <div className="text-xs text-gray-500 mt-1">
+          <div className="text-xs text-stone-500 mt-1">
             {parseList(listB).length} unique items
           </div>
         </div>
       </div>
 
       {/* Buttons */}
-      <div className="flex gap-3 mb-6">
+      <div className="flex gap-2 mb-6 flex-wrap">
         <button
           onClick={performOperations}
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm"
+          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
         >
-          ✨ Perform Magic
+          Process
         </button>
         <button
           onClick={handleSwitch}
-          className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors text-sm"
+          className="px-4 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors text-sm font-medium"
         >
-          ↔️ Switch
+          Switch
         </button>
         <button
           onClick={handleClear}
-          className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors text-sm"
+          className="px-4 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors text-sm font-medium"
         >
           Clear
         </button>
@@ -225,8 +225,8 @@ const ListWizard: React.FC = () => {
       {/* Results Section */}
       {showResults ? (
         <div className="space-y-6">
-          <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">
-            🎩 Magic Results
+          <h3 className="text-lg font-semibold text-stone-800 border-b border-stone-200 pb-2">
+            Results
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -272,9 +272,9 @@ const ListWizard: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="text-gray-500 text-center py-12">
-          <div className="text-lg mb-2">🧙‍♂️ Ready to cast some magic</div>
-          <div>Enter your lists above and click "Perform Magic" to see the results</div>
+        <div className="text-stone-500 text-center py-12">
+          <div className="text-lg mb-2">Ready to process</div>
+          <div>Enter your lists above and click "Process" to see the results</div>
         </div>
       )}
     </div>

@@ -166,7 +166,7 @@ const SmartConverter: React.FC = () => {
 
   const decodeUnicode = useCallback((text: string): string => {
     try {
-      return text.replace(/\\u([0-9a-fA-F]{4})/g, (match, code) => {
+      return text.replace(/\\u([0-9a-fA-F]{4})/g, (_match, code) => {
         return String.fromCharCode(parseInt(code, 16));
       });
     } catch (error) {
@@ -346,7 +346,7 @@ const SmartConverter: React.FC = () => {
   const renderCollapsibleJSON = useCallback((obj: any, path: string = '', indentLevel: number = 0): React.ReactElement => {
     
     if (obj === null) {
-      return <span className="text-gray-500 italic">null</span>;
+      return <span className="text-stone-500 italic">null</span>;
     }
     
     if (typeof obj === 'boolean') {
@@ -354,11 +354,11 @@ const SmartConverter: React.FC = () => {
     }
     
     if (typeof obj === 'number') {
-      return <span className="text-orange-600 font-medium">{obj}</span>;
+      return <span className="text-amber-600 font-medium">{obj}</span>;
     }
     
     if (typeof obj === 'string') {
-      return <span className="text-green-600">"{obj}"</span>;
+      return <span className="text-emerald-600">"{obj}"</span>;
     }
     
     if (Array.isArray(obj)) {
@@ -366,7 +366,7 @@ const SmartConverter: React.FC = () => {
       const isEmpty = obj.length === 0;
       
       if (isEmpty) {
-        return <span className="text-gray-800 font-bold">[]</span>;
+        return <span className="text-stone-700 font-semibold">[]</span>;
       }
       
       return (
@@ -377,30 +377,26 @@ const SmartConverter: React.FC = () => {
               e.stopPropagation();
               toggleCollapse(path, obj);
             }}
-            className="relative z-30 inline-flex items-center justify-center w-5 h-5 mr-2 text-white bg-blue-500 hover:bg-blue-600 rounded-full transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-            title={isCollapsed ? "Expand array and children" : "Collapse array"}
+            className="inline-flex items-center justify-center w-4 h-4 mr-1 text-white bg-orange-400 hover:bg-orange-500 rounded-full text-xs font-bold transition-colors"
+            title={isCollapsed ? "Expand" : "Collapse"}
           >
-            <span className="text-xs font-medium leading-none">
-              {isCollapsed ? '+' : '−'}
-            </span>
+            {isCollapsed ? '+' : '−'}
           </button>
-          <span className="text-gray-800 font-bold">[</span>
+          <span className="text-stone-700 font-semibold">[</span>
           {isCollapsed ? (
-            <span className="text-gray-500 italic"> ... {obj.length} items </span>
+            <span className="text-stone-400 text-xs ml-1">{obj.length} items</span>
           ) : (
             <>
-              <br />
               {obj.map((item, index) => (
-                <div key={index} style={{ marginLeft: `${(indentLevel + 1) * 20}px` }}>
+                <div key={index} className="ml-5">
                   {renderCollapsibleJSON(item, path === '' ? `[${index}]` : `${path}[${index}]`, indentLevel + 1)}
-                  {index < obj.length - 1 && <span className="text-gray-800 font-bold">,</span>}
-                  <br />
+                  {index < obj.length - 1 && <span className="text-stone-500">,</span>}
                 </div>
               ))}
-              <div style={{ marginLeft: `${indentLevel * 20}px` }}></div>
             </>
           )}
-          <span className="text-gray-800 font-bold">]</span>
+          {isCollapsed && <span className="text-stone-700 font-semibold">]</span>}
+          {!isCollapsed && <span className="text-stone-700 font-semibold">]</span>}
         </span>
       );
     }
@@ -411,7 +407,7 @@ const SmartConverter: React.FC = () => {
       const isEmpty = keys.length === 0;
       
       if (isEmpty) {
-        return <span className="text-gray-800 font-bold">{"{}"}</span>;
+        return <span className="text-stone-700 font-semibold">{"{}"}</span>;
       }
       
       return (
@@ -422,32 +418,28 @@ const SmartConverter: React.FC = () => {
               e.stopPropagation();
               toggleCollapse(path, obj);
             }}
-            className="relative z-30 inline-flex items-center justify-center w-5 h-5 mr-2 text-white bg-blue-500 hover:bg-blue-600 rounded-full transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-            title={isCollapsed ? "Expand object and children" : "Collapse object"}
+            className="inline-flex items-center justify-center w-4 h-4 mr-1 text-white bg-orange-400 hover:bg-orange-500 rounded-full text-xs font-bold transition-colors"
+            title={isCollapsed ? "Expand" : "Collapse"}
           >
-            <span className="text-xs font-medium leading-none">
-              {isCollapsed ? '+' : '−'}
-            </span>
+            {isCollapsed ? '+' : '−'}
           </button>
-          <span className="text-gray-800 font-bold">{"{"}</span>
+          <span className="text-stone-700 font-semibold">{"{"}</span>
           {isCollapsed ? (
-            <span className="text-gray-500 italic"> ... {keys.length} keys </span>
+            <span className="text-stone-400 text-xs ml-1">{keys.length} keys</span>
           ) : (
             <>
-              <br />
               {keys.map((key, index) => (
-                <div key={key} style={{ marginLeft: `${(indentLevel + 1) * 20}px` }}>
-                  <span className="text-blue-600 font-semibold">"{key}"</span>
-                  <span className="text-gray-800 font-bold">: </span>
+                <div key={key} className="ml-5">
+                  <span className="text-sky-600 font-medium">"{key}"</span>
+                  <span className="text-stone-500">: </span>
                   {renderCollapsibleJSON(obj[key], path === '' ? key : `${path}.${key}`, indentLevel + 1)}
-                  {index < keys.length - 1 && <span className="text-gray-800 font-bold">,</span>}
-                  <br />
+                  {index < keys.length - 1 && <span className="text-stone-500">,</span>}
                 </div>
               ))}
-              <div style={{ marginLeft: `${indentLevel * 20}px` }}></div>
             </>
           )}
-          <span className="text-gray-800 font-bold">{"}"}</span>
+          {isCollapsed && <span className="text-stone-700 font-semibold">{"}"}</span>}
+          {!isCollapsed && <span className="text-stone-700 font-semibold">{"}"}</span>}
         </span>
       );
     }
@@ -485,7 +477,7 @@ const SmartConverter: React.FC = () => {
       const highlightedLines = lines.map((line, index) => {
         let highlighted = line
           // Highlight quoted strings (both valid and invalid)
-          .replace(/"([^"]*)":/g, '<span class="text-blue-600 font-semibold">"$1"</span>:')
+          .replace(/"([^"]*)":/g, '<span class="text-orange-500 font-semibold">"$1"</span>:')
           .replace(/:\s*"([^"]*)"/g, ': <span class="text-green-600">"$1"</span>')
           // Highlight unquoted keys (common error) with warning color
           .replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1<span class="text-yellow-600 font-semibold bg-yellow-100 px-1 rounded">$2</span>:')
@@ -493,7 +485,7 @@ const SmartConverter: React.FC = () => {
           .replace(/'([^']*)'/g, '<span class="text-yellow-600 bg-yellow-100 px-1 rounded">\'$1\'</span>')
           // Highlight boolean and null values
           .replace(/:\s*(true|false)/g, ': <span class="text-purple-600 font-medium">$1</span>')
-          .replace(/:\s*(null)/g, ': <span class="text-gray-500 italic">$1</span>')
+          .replace(/:\s*(null)/g, ': <span class="text-stone-500 italic">$1</span>')
           // Highlight numbers (avoid matching time formats)
           .replace(/:\s*(\d+(?:\.\d+)?)\s*([,}\]])/g, ': <span class="text-orange-600 font-medium">$1</span>$2')
           // Highlight structural characters
@@ -518,7 +510,7 @@ const SmartConverter: React.FC = () => {
   }, [renderCollapsibleJSON]);
 
   // Sync scroll between textarea and highlight background
-  const handleScroll = useCallback((e: React.UIEvent<HTMLTextAreaElement>) => {
+  const handleScroll = useCallback(() => {
     if (highlightRef.current && textareaRef.current) {
       highlightRef.current.scrollTop = textareaRef.current.scrollTop;
       highlightRef.current.scrollLeft = textareaRef.current.scrollLeft;
@@ -740,27 +732,27 @@ const SmartConverter: React.FC = () => {
   }, [rightText]);
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6 tracking-tight">Smart Converter</h2>
+    <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+      <h2 className="text-xl font-semibold text-stone-900 mb-6 tracking-tight">Smart Converter</h2>
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Left Panel - Encoded Text */}
         <div className="lg:col-span-5">
           <div className="flex items-center justify-between mb-3">
-            <label htmlFor="encoded-text" className="block text-base font-medium text-gray-700">
+            <label htmlFor="encoded-text" className="block text-sm font-medium text-stone-700">
               {getEncodingLabel()}
         </label>
             <div className="flex space-x-2">
               <button
                 onClick={handleCopyLeft}
-                className="text-sm text-gray-500 hover:text-gray-700 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+                className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
                 disabled={!leftText}
               >
                 {copyFeedback === 'left' ? '✓ Copied!' : 'Copy'}
               </button>
               <button
                 onClick={handleClearLeft}
-                className="text-sm text-gray-500 hover:text-gray-700 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+                className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
               >
                 Clear
               </button>
@@ -770,7 +762,7 @@ const SmartConverter: React.FC = () => {
             id="encoded-text"
             value={leftText}
             onChange={(e) => handleLeftTextChange(e.target.value)}
-            className="w-full h-[900px] p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm"
+            className="w-full h-[900px] p-4 border border-stone-200 rounded-xl focus:ring-2 focus:ring-orange-400/50 focus:border-orange-400 resize-none font-mono text-sm transition-all duration-200"
             placeholder={getPlaceholder()}
             ref={textareaRef}
             onScroll={handleScroll}
@@ -781,14 +773,14 @@ const SmartConverter: React.FC = () => {
         <div className="lg:col-span-2 flex flex-col items-center justify-start pt-8">
           {/* Encoding Type Selector */}
           <div className="flex flex-col items-center space-y-2 w-full">
-            <span className="text-sm font-medium text-gray-700 mb-2">Encoding Type</span>
+            <span className="text-sm font-medium text-stone-700 mb-2">Encoding Type</span>
             <div className="flex flex-col space-y-1 w-full">
               <button
                 onClick={() => setEncodingType('base64')}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors w-full ${
                   encodingType === 'base64'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-orange-500 text-white shadow-sm'
+                    : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                 }`}
               >
                 Base64
@@ -797,8 +789,8 @@ const SmartConverter: React.FC = () => {
                 onClick={() => setEncodingType('url')}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors w-full ${
                   encodingType === 'url'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-orange-500 text-white shadow-sm'
+                    : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                 }`}
         >
                 URL Encode
@@ -807,8 +799,8 @@ const SmartConverter: React.FC = () => {
                 onClick={() => setEncodingType('jwt')}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors w-full ${
                   encodingType === 'jwt'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-orange-500 text-white shadow-sm'
+                    : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                 }`}
               >
                 JWT Decode
@@ -817,8 +809,8 @@ const SmartConverter: React.FC = () => {
                 onClick={() => setEncodingType('hex')}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors w-full ${
                   encodingType === 'hex'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-orange-500 text-white shadow-sm'
+                    : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                 }`}
               >
                 Hex / ASCII
@@ -827,8 +819,8 @@ const SmartConverter: React.FC = () => {
                 onClick={() => setEncodingType('unicode')}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors w-full ${
                   encodingType === 'unicode'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-orange-500 text-white shadow-sm'
+                    : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                 }`}
               >
                 Unicode Escape
@@ -840,23 +832,23 @@ const SmartConverter: React.FC = () => {
         {/* Right Panel - Plain Text */}
         <div className="lg:col-span-5">
           <div className="flex items-center justify-between mb-3">
-            <label htmlFor="plain-text" className="block text-base font-medium text-gray-700">
+            <label htmlFor="plain-text" className="block text-sm font-medium text-stone-700">
               {encodingType === 'jwt' ? 'Decoded JWT' : 'Plain Text'}
             </label>
             <div className="flex space-x-2">
               {showSyntaxHighlight && hasCollapsibleContent() && (
                 <>
                   <button
-                    onClick={expandAll}
-                    className="text-xs text-blue-600 hover:text-white hover:bg-blue-600 transition-all duration-200 px-3 py-1.5 rounded-full border border-blue-300 hover:border-blue-600 font-medium"
-                    title="Expand all JSON nodes"
+                    onClick={collapseAll}
+                    className="text-xs text-orange-500 hover:text-white hover:bg-orange-500 transition-all duration-200 px-3 py-1.5 rounded-full border border-orange-300 hover:border-orange-500 font-medium"
+                    title="Collapse all JSON nodes"
                   >
                     − All
                   </button>
                   <button
-                    onClick={collapseAll}
-                    className="text-xs text-blue-600 hover:text-white hover:bg-blue-600 transition-all duration-200 px-3 py-1.5 rounded-full border border-blue-300 hover:border-blue-600 font-medium"
-                    title="Collapse all JSON nodes"
+                    onClick={expandAll}
+                    className="text-xs text-orange-500 hover:text-white hover:bg-orange-500 transition-all duration-200 px-3 py-1.5 rounded-full border border-orange-300 hover:border-orange-500 font-medium"
+                    title="Expand all JSON nodes"
                   >
                     + All
                   </button>
@@ -864,21 +856,21 @@ const SmartConverter: React.FC = () => {
               )}
               <button
                 onClick={handleBeautify}
-                className="text-sm text-gray-500 hover:text-gray-700 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+                className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
                 disabled={!rightText}
               >
                 {getBeautifyButtonText()}
         </button>
         <button
                 onClick={handleCopyRight}
-                className="text-sm text-gray-500 hover:text-gray-700 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+                className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
                 disabled={!rightText}
         >
                 {copyFeedback === 'right' ? '✓ Copied!' : 'Copy'}
         </button>
         <button
                 onClick={handleClearRight}
-                className="text-sm text-gray-500 hover:text-gray-700 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+                className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
         >
           Clear
         </button>
@@ -890,7 +882,7 @@ const SmartConverter: React.FC = () => {
             {/* Syntax highlighted background - only show when enabled and content is JSON */}
             {showSyntaxHighlight && rightText && (rightText.trim().startsWith('{') || rightText.trim().startsWith('[')) && (
               <div 
-                className="absolute inset-0 w-full h-[900px] p-4 border border-gray-300 rounded-lg font-mono text-sm overflow-auto z-20 whitespace-pre-wrap break-words"
+                className="absolute inset-0 w-full h-[900px] p-4 border border-stone-200 rounded-lg font-mono text-sm overflow-auto z-20 whitespace-pre-wrap break-words"
                 style={{ scrollBehavior: 'auto', pointerEvents: 'auto' }}
                 ref={highlightRef}
               >
@@ -905,10 +897,10 @@ const SmartConverter: React.FC = () => {
               onChange={(e) => handleRightTextChange(e.target.value)}
               onScroll={handleScroll}
               ref={textareaRef}
-              className={`relative z-10 w-full h-[900px] p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm ${
+              className={`relative z-10 w-full h-[900px] p-4 border border-stone-200 rounded-xl focus:ring-2 focus:ring-orange-400/50 focus:border-orange-400 resize-none font-mono text-sm transition-all duration-200 ${
                 showSyntaxHighlight && rightText && (rightText.trim().startsWith('{') || rightText.trim().startsWith('[')) 
                   ? 'bg-transparent text-transparent caret-gray-800' 
-                  : 'bg-white text-gray-900'
+                  : 'bg-white text-stone-900'
               }`}
               placeholder={encodingType === 'jwt' ? 'Decoded JWT will appear here...' : 'Plain text will appear here...'}
               readOnly={encodingType === 'jwt'}
@@ -928,7 +920,7 @@ const SmartConverter: React.FC = () => {
       )}
 
       {/* Info */}
-      <div className="mt-6 text-xs text-gray-500 text-center">
+      <div className="mt-6 text-xs text-stone-500 text-center">
         {encodingType === 'jwt' 
           ? 'JWT tokens can only be decoded. Enter a JWT token on the left to see its decoded content.'
           : 'Type in either panel to automatically convert. Both panels are editable.'

@@ -137,7 +137,7 @@ const TextDiffTool: React.FC = () => {
 
   const renderUnifiedView = () => {
     return (
-      <div className="p-4 border border-gray-200 rounded-md bg-white font-mono text-sm leading-relaxed whitespace-pre-wrap h-[750px] overflow-y-auto">
+      <div className="p-4 border border-stone-200 rounded-md bg-white font-mono text-sm leading-relaxed whitespace-pre-wrap h-[750px] overflow-y-auto">
         {diffParts.map((part, index) => {
           let className = '';
           
@@ -149,7 +149,7 @@ const TextDiffTool: React.FC = () => {
               className = 'bg-red-200 text-red-900 px-1 rounded line-through';
               break;
             case 'unchanged':
-              className = 'text-gray-800';
+              className = 'text-stone-800';
               break;
           }
 
@@ -189,10 +189,10 @@ const TextDiffTool: React.FC = () => {
       const lines = fullText.split('\n');
       
       return (
-        <div className="border border-gray-200 rounded-md bg-white h-[750px] overflow-y-auto">
+        <div className="border border-stone-200 rounded-md bg-white h-[750px] overflow-y-auto">
           <div className="flex text-sm font-mono">
             {/* Line numbers column */}
-            <div className="w-12 bg-gray-50 border-r border-gray-200 text-xs text-gray-500 text-right py-4 px-2 select-none flex-shrink-0">
+            <div className="w-12 bg-stone-50 border-r border-stone-200 text-xs text-stone-500 text-right py-4 px-2 select-none flex-shrink-0">
               {lines.map((_, index) => (
                 <div key={index} className="h-[21px] leading-[21px]">
                   {index + 1}
@@ -210,7 +210,7 @@ const TextDiffTool: React.FC = () => {
                 } else if (!isLeft && part.type === 'added') {
                   className = 'bg-green-200 text-green-900 px-1 rounded';
                 } else if (part.type === 'unchanged') {
-                  className = 'text-gray-800';
+                  className = 'text-stone-800';
                 }
 
                 return (
@@ -228,11 +228,11 @@ const TextDiffTool: React.FC = () => {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Text A (with deletions)</h4>
+          <h4 className="text-sm font-medium text-stone-700 mb-2">Text A (with deletions)</h4>
           {renderSideWithLineNumbers(leftParts, true)}
         </div>
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Text B (with additions)</h4>
+          <h4 className="text-sm font-medium text-stone-700 mb-2">Text B (with additions)</h4>
           {renderSideWithLineNumbers(rightParts, false)}
         </div>
       </div>
@@ -242,8 +242,8 @@ const TextDiffTool: React.FC = () => {
   const renderDiffResult = () => {
     if (!showDiff) {
       return (
-        <div className="text-gray-500 text-center h-[750px] flex flex-col justify-center">
-          <div className="text-lg mb-2">📝 Ready to compare</div>
+        <div className="text-stone-500 text-center h-[750px] flex flex-col justify-center">
+          <div className="text-lg mb-2">Ready to compare</div>
           <div>Enter text in both fields and click "Compare" to see character-level differences</div>
         </div>
       );
@@ -251,7 +251,7 @@ const TextDiffTool: React.FC = () => {
 
     if (diffParts.length === 0 || (leftText === rightText)) {
       return (
-        <div className="text-gray-500 text-center h-[750px] flex flex-col justify-center">
+        <div className="text-stone-500 text-center h-[750px] flex flex-col justify-center">
           <div className="text-lg mb-2">✅ No differences found</div>
           <div>Both texts are identical</div>
         </div>
@@ -262,118 +262,118 @@ const TextDiffTool: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6 tracking-tight">Text Diff Tool</h2>
+    <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+      <h2 className="text-xl font-semibold text-stone-900 mb-6 tracking-tight">Text Diff Tool</h2>
       
       {/* Input Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label htmlFor="leftText" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="leftText" className="block text-sm font-medium text-stone-700">
               Text A
           </label>
             <button
               onClick={() => copyToClipboard(leftText)}
-              className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
+              className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
               title="Copy to clipboard"
             >
-              📋 Copy
+              Copy
             </button>
           </div>
           <textarea
             id="leftText"
             value={leftText}
             onChange={(e) => setLeftText(e.target.value)}
-            className="w-full h-[350px] p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm"
+            className="w-full h-[350px] p-4 border border-stone-200 rounded-xl focus:ring-2 focus:ring-orange-400/50 focus:border-orange-400 transition-all resize-none font-mono text-sm"
             placeholder="Enter first text here..."
           />
         </div>
         
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label htmlFor="rightText" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="rightText" className="block text-sm font-medium text-stone-700">
               Text B
           </label>
             <button
               onClick={() => copyToClipboard(rightText)}
-              className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
+              className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
               title="Copy to clipboard"
             >
-              📋 Copy
+              Copy
             </button>
           </div>
           <textarea
             id="rightText"
             value={rightText}
             onChange={(e) => setRightText(e.target.value)}
-            className="w-full h-[350px] p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-sm"
+            className="w-full h-[350px] p-4 border border-stone-200 rounded-xl focus:ring-2 focus:ring-orange-400/50 focus:border-orange-400 transition-all resize-none font-mono text-sm"
             placeholder="Enter second text here..."
           />
         </div>
       </div>
 
       {/* Buttons */}
-      <div className="flex gap-3 mb-6">
+      <div className="flex gap-2 mb-6 flex-wrap">
         <button
           onClick={handleCompare}
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm"
+          className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
         >
-          🕵️ Detect Changes
+          Compare
         </button>
         <button
           onClick={handleSwitch}
-          className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors text-sm"
+          className="px-4 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors text-sm font-medium"
         >
-          ↔️ Switch
+          Switch
         </button>
         <button
           onClick={handleClear}
-          className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors text-sm"
+          className="px-4 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors text-sm font-medium"
         >
           Clear
         </button>
 
         {/* Diff Mode Toggle */}
-        <div className="flex border border-gray-300 rounded-md overflow-hidden">
+        <div className="flex border border-stone-200 rounded-lg overflow-hidden">
           <button
             onClick={() => handleDiffModeChange('lines')}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               diffMode === 'lines'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
+                ? 'bg-orange-500 text-white'
+                : 'bg-white text-stone-600 hover:bg-stone-50'
             }`}
           >
-            📄 Lines
+            Lines
           </button>
           <button
             onClick={() => handleDiffModeChange('chars')}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-l border-gray-300 ${
+            className={`px-4 py-2 text-sm font-medium transition-colors border-l border-stone-200 ${
               diffMode === 'chars'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
+                ? 'bg-orange-500 text-white'
+                : 'bg-white text-stone-600 hover:bg-stone-50'
             }`}
           >
-            🔤 Chars
+            Chars
           </button>
         </div>
         
         {showDiff && diffParts.length > 0 && (
           <button
             onClick={() => setShowUnified(!showUnified)}
-            className={`px-6 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors text-sm ${
+            className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
               showUnified 
-                ? 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-500'
+                ? 'bg-stone-600 text-white hover:bg-stone-700' 
+                : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
             }`}
           >
-            {showUnified ? '📊 Side-by-Side' : '📝 Unified View'}
+            {showUnified ? 'Side-by-Side' : 'Unified View'}
           </button>
         )}
       </div>
 
       {/* Stats */}
       {showDiff && (
-        <div className="mb-4 p-3 bg-gray-50 rounded-md">
+        <div className="mb-4 p-3 bg-stone-50 rounded-md">
           <div className="flex items-center gap-6 text-sm">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-green-500 rounded"></div>
@@ -388,8 +388,8 @@ const TextDiffTool: React.FC = () => {
               </span>
               </div>
               <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gray-400 rounded"></div>
-              <span className="font-medium text-gray-700">
+              <div className="w-3 h-3 bg-stone-400 rounded"></div>
+              <span className="font-medium text-stone-700">
                 {stats.unchanged} {diffMode === 'lines' ? 'lines' : 'characters'} unchanged
               </span>
             </div>
@@ -399,16 +399,18 @@ const TextDiffTool: React.FC = () => {
 
       {/* Main Diff Output */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-800">
-            {showUnified ? 'Unified View' : 'Side-by-Side Comparison'}
-          </h3>
-          {showDiff && diffParts.length > 0 && (
-            <span className="text-sm text-gray-600">
-              {showUnified ? '(Green = Added, Red = Removed)' : '(Red = Deleted, Green = Added)'}
-            </span>
-          )}
-        </div>
+        {showDiff && (
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-stone-800">
+              {showUnified ? 'Unified View' : 'Side-by-Side Comparison'}
+            </h3>
+            {diffParts.length > 0 && (
+              <span className="text-sm text-stone-600">
+                {showUnified ? '(Green = Added, Red = Removed)' : '(Red = Deleted, Green = Added)'}
+              </span>
+            )}
+          </div>
+        )}
         <div className="bg-white">
           {renderDiffResult()}
         </div>

@@ -32,7 +32,7 @@ Powerful list processing utilities:
 ### ⏰ Time Converter
 Comprehensive timestamp conversion tool:
 - **Auto-detection** - Automatically detects seconds vs milliseconds format
-- **Multiple Timezones** - Support for 8 major timezones (PST/PDT, UTC, IST, EST/EDT, CST, JST, GMT, CET)
+- **Multiple Timezones** - Support for 10 major timezones (UTC, PST/PDT, EST/EDT, CST, IST, JST, SGT, GMT, CET, AEDT/AEST)
 - **Batch Processing** - Convert multiple timestamps simultaneously
 - **Color-coded Results** - Each timezone has a unique color for easy identification
 - **Copy Functionality** - One-click copy for any conversion result
@@ -116,10 +116,10 @@ If you're still having issues:
 
 - **Frontend**: React 19 with TypeScript
 - **Styling**: TailwindCSS for modern, responsive design
-- **Build Tool**: Create React App
+- **Build Tool**: Vite 6.0 (fast, modern build tool)
 - **Code Quality**: ESLint for code linting
 - **Package Manager**: npm
-- **Node.js**: v14+ (tested with v24.8.0)
+- **Node.js**: v18+ (tested with v24.12.0)
 
 ## 📁 Project Structure
 
@@ -131,10 +131,17 @@ tooly/
 │   │   ├── SmartConverter.tsx
 │   │   ├── TextDiffTool.tsx
 │   │   ├── ListWizard.tsx
-│   │   └── TimeConverter.tsx
-│   ├── App.tsx           # Main application component
-│   ├── index.tsx         # Application entry point
-│   └── index.css         # Global styles
+│   │   ├── TimeConverter.tsx
+│   │   └── About.tsx
+│   ├── utils/             # Utility functions
+│   │   ├── base64.ts
+│   │   └── formatters.ts
+│   ├── App.tsx            # Main application component
+│   ├── index.tsx          # Application entry point
+│   └── index.css          # Global styles
+├── vite.config.ts         # Vite configuration
+├── tailwind.config.js     # Tailwind configuration
+├── tsconfig.json          # TypeScript configuration
 ├── package.json
 └── README.md
 ```
