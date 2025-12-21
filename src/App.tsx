@@ -5,6 +5,7 @@ import TextDiffTool from './components/TextDiffTool';
 import ListWizard from './components/ListWizard';
 import TimeConverter from './components/TimeConverter';
 import About from './components/About';
+import { Analytics } from "@vercel/analytics/react"
 
 type EncodingType = 'base64' | 'url' | 'jwt' | 'hex' | 'unicode';
 
@@ -146,6 +147,7 @@ function App() {
       <Routes>
         <Route path="/*" element={<AppContent />} />
       </Routes>
+      <Analytics />
     </Router>
   );
 }

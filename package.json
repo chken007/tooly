@@ -5,6 +5,7 @@
   "private": false,
   "type": "module",
   "dependencies": {
+    "@vercel/analytics": "^1.6.1",
     "diff": "^8.0.2",
     "js-yaml": "^4.1.0",
     "react": "^19.0.0",
