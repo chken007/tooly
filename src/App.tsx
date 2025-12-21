@@ -6,6 +6,7 @@ import ListWizard from './components/ListWizard';
 import TimeConverter from './components/TimeConverter';
 import About from './components/About';
 import { Analytics } from "@vercel/analytics/react"
+import { SpeedInsights } from "@vercel/speed-insights/react"
 
 type EncodingType = 'base64' | 'url' | 'jwt' | 'hex' | 'unicode';
 
@@ -148,6 +149,7 @@ function App() {
         <Route path="/*" element={<AppContent />} />
       </Routes>
       <Analytics />
+      <SpeedInsights />
     </Router>
   );
 }
