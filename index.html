@@ -24,21 +24,33 @@
     <meta property="og:url" content="https://www.tooly.one/" />
     <meta property="og:title" content="Tooly - Free JSON Formatter, Base64 Decoder, JWT Tool & More" />
     <meta property="og:description" content="Free online developer tools: JSON formatter, Base64 encoder/decoder, JWT decoder, text diff, timestamp converter. Fast, clean, no ads." />
-    <meta property="og:image" content="https://www.tooly.one/og-image.png" />
     <meta property="og:site_name" content="Tooly" />
+    <meta property="og:locale" content="en_US" />
     
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:card" content="summary" />
     <meta property="twitter:url" content="https://www.tooly.one/" />
     <meta property="twitter:title" content="Tooly - Free JSON Formatter, Base64 Decoder, JWT Tool & More" />
     <meta property="twitter:description" content="Free online developer tools: JSON formatter, Base64 encoder/decoder, JWT decoder, text diff, timestamp converter. Fast, clean, no ads." />
-    <meta property="twitter:image" content="https://www.tooly.one/og-image.png" />
+    <meta property="twitter:creator" content="@tooly" />
     
     <!-- Additional SEO -->
     <meta name="language" content="English" />
     <meta name="revisit-after" content="7 days" />
     <meta name="distribution" content="global" />
     <meta name="rating" content="general" />
+    <meta name="referrer" content="no-referrer-when-downgrade" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    
+    <!-- Geo Tags -->
+    <meta name="geo.region" content="US" />
+    <meta name="geo.placename" content="Global" />
+    
+    <!-- Mobile Web App -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Tooly" />
     
     <link rel="manifest" href="/manifest.json" />
     
@@ -51,10 +63,11 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
+      "@type": "SoftwareApplication",
       "name": "Tooly",
       "applicationCategory": "DeveloperApplication",
-      "operatingSystem": "Web",
+      "operatingSystem": "Any",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -62,28 +75,29 @@
       },
       "description": "Free online developer tools including JSON formatter, Base64 encoder/decoder, JWT decoder, text diff tool, and timestamp converter. No ads, no signup required.",
       "url": "https://www.tooly.one/",
-      "screenshot": "https://www.tooly.one/og-image.png",
+      "applicationSubCategory": "Development Tools",
       "author": {
         "@type": "Person",
         "name": "Heng Cui"
       },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "5",
-        "ratingCount": "1"
-      },
-      "featureList": [
-        "JSON Formatter with Syntax Highlighting",
-        "JSON Sort & Beautify",
-        "Base64 Encoder/Decoder",
-        "JWT Token Decoder",
-        "Text Diff Tool",
-        "List Operations (Union, Intersection, Difference)",
-        "Timestamp Converter (Multiple Timezones)",
-        "URL Encoder/Decoder",
-        "Hex to ASCII Converter",
-        "Unicode Escape Converter"
-      ]
+      "datePublished": "2025-12-21",
+      "inLanguage": "en",
+      "isAccessibleForFree": true,
+      "featureList": "JSON Formatter with Syntax Highlighting, JSON Sort & Beautify, Base64 Encoder/Decoder, JWT Token Decoder, Text Diff Tool, List Operations, Timestamp Converter, URL Encoder/Decoder, Hex to ASCII Converter, Unicode Escape Converter"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Tooly",
+      "url": "https://www.tooly.one/",
+      "description": "Free developer tools without ads",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.tooly.one/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
     }
     </script>
   </head>

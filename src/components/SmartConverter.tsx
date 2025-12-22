@@ -275,7 +275,7 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
         needsFormatting = false;
         beautified = trimmed;
       } else if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-        // Enhanced robust JSON beautification
+      // Enhanced robust JSON beautification
         // Try standard JSON first
         try {
           const parsed = JSON.parse(trimmed);
@@ -366,7 +366,7 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
       if (needsFormatting && beautified !== trimmed) {
         // Content was formatted
         setRightText(beautified);
-        setError('');
+      setError('');
         setIsBeautified(true);
         setIsHighlightMode(false);
         setLastModified('right');
@@ -459,7 +459,7 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
             style={{ pointerEvents: 'auto' }}
             title={isCollapsed ? "Expand" : "Collapse"}
           >
-            {isCollapsed ? '+' : '−'}
+              {isCollapsed ? '+' : '−'}
           </button>
           <span className="text-stone-700 font-semibold">[</span>
           {isCollapsed ? (
@@ -501,7 +501,7 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
             style={{ pointerEvents: 'auto' }}
             title={isCollapsed ? "Expand" : "Collapse"}
           >
-            {isCollapsed ? '+' : '−'}
+              {isCollapsed ? '+' : '−'}
           </button>
           <span className="text-stone-700 font-semibold">{"{"}</span>
           {isCollapsed ? (
@@ -924,7 +924,7 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
             </label>
             <div className="flex space-x-2">
               {/* Show Highlight/Edit button */}
-              <button
+                  <button
                 onClick={handleHighlight}
                 className={`text-sm transition-colors px-3 py-1 rounded ${
                   isHighlightMode 
@@ -935,7 +935,7 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
                 title={isHighlightMode ? "Exit highlight mode to edit" : "Enable syntax highlighting"}
               >
                 {isHighlightMode ? '✏️ Edit' : 'Highlight'}
-              </button>
+                  </button>
               
               {/* Show +All/-All only in Highlight mode */}
               {isHighlightMode && hasCollapsibleContent() && (
@@ -968,17 +968,17 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
                   >
                     {isSorted ? '✨ Sorted' : 'Sort'}
                   </button>
-                  <button
-                    onClick={handleBeautify}
+              <button
+                onClick={handleBeautify}
                     className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
-                    disabled={!rightText}
-                  >
-                    {getBeautifyButtonText()}
-              </button>
+                disabled={!rightText}
+              >
+                {getBeautifyButtonText()}
+        </button>
                 </>
               )}
               
-              <button
+        <button
                 onClick={handleCopyRight}
                 className="text-sm text-stone-500 hover:text-stone-700 transition-colors px-2 py-1 rounded hover:bg-stone-100"
                 disabled={!rightText}
@@ -1006,14 +1006,14 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
               </div>
             ) : (
               /* Edit Mode: Editable textarea */
-              <textarea
-                id="plain-text"
-                value={rightText}
-                onChange={(e) => handleRightTextChange(e.target.value)}
+        <textarea
+              id="plain-text"
+              value={rightText}
+              onChange={(e) => handleRightTextChange(e.target.value)}
                 className="w-full h-[900px] p-4 border border-stone-200 rounded-xl focus:ring-2 focus:ring-orange-400/50 focus:border-orange-400 resize-none font-mono text-sm transition-all duration-200 bg-white text-stone-900"
-                placeholder={encodingType === 'jwt' ? 'Decoded JWT will appear here...' : 'Plain text will appear here...'}
-                readOnly={encodingType === 'jwt'}
-              />
+              placeholder={encodingType === 'jwt' ? 'Decoded JWT will appear here...' : 'Plain text will appear here...'}
+              readOnly={encodingType === 'jwt'}
+            />
             )}
           </div>
         </div>

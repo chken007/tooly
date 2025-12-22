@@ -402,16 +402,16 @@ const TextDiffTool: React.FC<TextDiffToolProps> = ({ state, setState }) => {
       {/* Main Diff Output */}
       <div>
         {showDiff && (
-          <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-stone-800">
-              {showUnified ? 'Unified View' : 'Side-by-Side Comparison'}
-            </h3>
+            {showUnified ? 'Unified View' : 'Side-by-Side Comparison'}
+          </h3>
             {diffParts.length > 0 && (
               <span className="text-sm text-stone-600">
-                {showUnified ? '(Green = Added, Red = Removed)' : '(Red = Deleted, Green = Added)'}
-              </span>
-            )}
-          </div>
+              {showUnified ? '(Green = Added, Red = Removed)' : '(Red = Deleted, Green = Added)'}
+            </span>
+          )}
+        </div>
         )}
         <div className="bg-white">
           {renderDiffResult()}
