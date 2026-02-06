@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import * as Diff from 'diff';
+import { beautifyAndSortJSON } from '../utils/formatters';
 
 interface DiffPart {
   type: 'added' | 'removed' | 'unchanged';
@@ -33,6 +34,7 @@ const TextDiffTool: React.FC<TextDiffToolProps> = ({ state, setState }) => {
   const [showDiff, setShowDiff] = useState(false);
   const [showUnified, setShowUnified] = useState(false);
   const [stats, setStats] = useState({ added: 0, removed: 0, unchanged: 0 });
+  const [error, setError] = useState<string>('');
 
   const processDiff = (leftText: string, rightText: string) => {
     // Use line-level or character-level diff based on user choice
@@ -90,6 +92,65 @@ const TextDiffTool: React.FC<TextDiffToolProps> = ({ state, setState }) => {
     setShowDiff(false);
     setShowUnified(false);
     setStats({ added: 0, removed: 0, unchanged: 0 });
+    setError('');
+  };
+
+  const handleSmartJSONCompare = () => {
+    if (!leftText.trim() && !rightText.trim()) {
+      setError('Please enter JSON in both fields');
+      return;
+    }
+
+    try {
+      // Format and sort both JSON texts
+      const formattedLeft = leftText.trim() ? beautifyAndSortJSON(leftText) : '';
+      const formattedRight = rightText.trim() ? beautifyAndSortJSON(rightText) : '';
+
+      // Update the text fields with formatted JSON
+      setLeftText(formattedLeft);
+      setRightText(formattedRight);
+
+      // Automatically set to lines mode for better JSON comparison
+      setDiffMode('lines');
+
+      // Process the diff with the formatted JSON
+      const diff = Diff.diffLines(formattedLeft, formattedRight);
+      
+      const processedParts: DiffPart[] = [];
+      let addedCount = 0;
+      let removedCount = 0;
+      let unchangedCount = 0;
+
+      diff.forEach((part) => {
+        if (part.added) {
+          processedParts.push({
+            type: 'added',
+            value: part.value
+          });
+          addedCount += part.value.split('\n').length - 1;
+        } else if (part.removed) {
+          processedParts.push({
+            type: 'removed',
+            value: part.value
+          });
+          removedCount += part.value.split('\n').length - 1;
+        } else {
+          processedParts.push({
+            type: 'unchanged',
+            value: part.value
+          });
+          unchangedCount += part.value.split('\n').length - 1;
+        }
+      });
+
+      setDiffParts(processedParts);
+      setStats({ added: addedCount, removed: removedCount, unchanged: unchangedCount });
+      setShowDiff(true);
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to format JSON. Please check your input.');
+      setShowDiff(false);
+    }
   };
 
   const handleDiffModeChange = (newMode: 'chars' | 'lines') => {
@@ -329,6 +390,13 @@ const TextDiffTool: React.FC<TextDiffToolProps> = ({ state, setState }) => {
           Compare
         </button>
         <button
+          onClick={handleSmartJSONCompare}
+          className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium"
+          title="Format, sort, and compare JSON"
+        >
+          Smart JSON Compare
+        </button>
+        <button
           onClick={handleClear}
           className="px-4 py-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors text-sm font-medium"
         >
@@ -372,6 +440,13 @@ const TextDiffTool: React.FC<TextDiffToolProps> = ({ state, setState }) => {
           </button>
         )}
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-200">
+          {error}
+        </div>
+      )}
 
       {/* Stats */}
       {showDiff && (
