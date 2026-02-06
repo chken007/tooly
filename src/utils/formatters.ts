@@ -50,4 +50,40 @@ export function autoFormat(input: string): string {
   }
   
   throw new Error('Input is neither valid JSON nor YAML');
+}
+
+export function sortJSON(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  // Handle arrays - recursively sort contents
+  if (Array.isArray(obj)) {
+    return obj.map(item => sortJSON(item));
+  }
+
+  // Handle objects - sort keys alphabetically
+  if (typeof obj === 'object') {
+    const sortedObj: any = {};
+    const keys = Object.keys(obj).sort();
+    
+    keys.forEach(key => {
+      sortedObj[key] = sortJSON(obj[key]);
+    });
+    
+    return sortedObj;
+  }
+
+  // Primitive values - return as is
+  return obj;
+}
+
+export function beautifyAndSortJSON(input: string): string {
+  try {
+    const parsed = JSON.parse(input);
+    const sorted = sortJSON(parsed);
+    return JSON.stringify(sorted, null, 2);
+  } catch (error) {
+    throw new Error('Invalid JSON format');
+  }
 } 
