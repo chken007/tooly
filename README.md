@@ -39,6 +39,18 @@ Comprehensive timestamp conversion tool:
 - **Color-coded Results** - Each timezone has a unique color for easy identification
 - **Copy Functionality** - One-click copy for any conversion result
 
+### 🔧 JSON Tools
+Dedicated JSON exploration and filtering tool:
+- **Interactive Tree View** - Expand/collapse nodes to explore nested JSON structures
+- **Expand All / Collapse All** - Quick navigation for large JSON files
+- **Search** - Find keys or values with real-time highlighting
+- **Click-to-Copy Paths** - Click any key to copy its JQ path (e.g., `.users[0].name`)
+- **JQ Filter** - Apply jq-like filters to extract and transform data
+  - Path extraction: `.data.users`, `.items[0]`
+  - Array iteration: `.users[].name`, `.products[].price`
+  - Built-in functions: `keys`, `length`, `type`
+- **Syntax Highlighting** - Color-coded values by type (strings, numbers, booleans, null)
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -134,6 +146,7 @@ tooly/
 │   │   ├── TextDiffTool.tsx
 │   │   ├── ListWizard.tsx
 │   │   ├── TimeConverter.tsx
+│   │   ├── JsonTools.tsx
 │   │   └── About.tsx
 │   ├── utils/             # Utility functions
 │   │   ├── base64.ts
@@ -170,6 +183,19 @@ tooly/
 ### Diff Master
 - Paste two versions of text to see highlighted differences
 - Perfect for comparing code snippets, configurations, or documents
+
+### JSON Tools
+- **Explore**: Paste JSON and use the interactive tree to explore nested data
+- **Search**: Type in the search box to highlight matching keys/values
+- **Filter**: Use JQ expressions like `.users[].name` to extract specific data
+- **Example filters**:
+  ```
+  .data.items[0]           # Get first item
+  .users[].email           # Get all emails from users array
+  .config.settings.theme   # Navigate nested objects
+  keys                     # List all top-level keys
+  length                   # Count items in array/object
+  ```
 
 ## 🎨 Design Features
 

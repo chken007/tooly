@@ -4,6 +4,7 @@ import SmartConverter from './components/SmartConverter';
 import TextDiffTool from './components/TextDiffTool';
 import ListWizard from './components/ListWizard';
 import TimeConverter from './components/TimeConverter';
+import JsonTools from './components/JsonTools';
 import About from './components/About';
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/react"
@@ -43,11 +44,18 @@ function AppContent() {
     selectedTimezones: ['UTC', 'PST/PDT'] as string[],
   });
 
+  // JsonTools state
+  const [jsonState, setJsonState] = useState({
+    jsonInput: '',
+    jqFilter: '',
+  });
+
   const tabs = [
     { id: 'converter', label: 'Smart Converter' },
     { id: 'diff', label: 'Diff Master' },
     { id: 'wizard', label: 'List Wizard' },
-    { id: 'time', label: 'Time Converter' }
+    { id: 'time', label: 'Time Converter' },
+    { id: 'json', label: 'JSON Tools' }
   ];
 
   // If we're on the about page, don't show the main app layout
@@ -119,6 +127,9 @@ function AppContent() {
         )}
         {activeTab === 'time' && (
           <TimeConverter state={timeState} setState={setTimeState} />
+        )}
+        {activeTab === 'json' && (
+          <JsonTools state={jsonState} setState={setJsonState} />
         )}
       </main>
 
