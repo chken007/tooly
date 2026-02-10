@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, memo, useRef } from 'react';
 
 interface JsonToolsProps {
   state: {
@@ -10,6 +10,247 @@ interface JsonToolsProps {
     jqFilter: string;
   }>>;
 }
+
+// Memoized tree node component to prevent unnecessary re-renders
+interface TreeNodeProps {
+  nodeKey: string;
+  value: any;
+  path: string;
+  depth: number;
+  isLast: boolean;
+  collapsedPaths: Set<string>;
+  onToggle: (path: string) => void;
+  onCopyPath: (path: string) => void;
+}
+
+const TreeNode = memo(({ nodeKey, value, path, depth, isLast, collapsedPaths, onToggle, onCopyPath }: TreeNodeProps) => {
+  const indent = depth * 20;
+
+  const handleCopy = (e: React.MouseEvent, copyPath: string) => {
+    e.stopPropagation();
+    onCopyPath(copyPath);
+  };
+
+  // Render primitive values
+  if (value === null) {
+    return (
+      <div style={{ marginLeft: indent }}>
+        {nodeKey && (
+          <>
+            <span 
+              className="text-sky-600 font-medium cursor-pointer hover:text-orange-500"
+              onClick={(e) => handleCopy(e, path)}
+            >
+              "{nodeKey}"
+            </span>
+            <span className="text-stone-500">: </span>
+          </>
+        )}
+        <span className="text-stone-400 italic">null</span>
+        {!isLast && <span className="text-stone-500">,</span>}
+      </div>
+    );
+  }
+
+  if (typeof value === 'boolean') {
+    return (
+      <div style={{ marginLeft: indent }}>
+        {nodeKey && (
+          <>
+            <span 
+              className="text-sky-600 font-medium cursor-pointer hover:text-orange-500"
+              onClick={(e) => handleCopy(e, path)}
+            >
+              "{nodeKey}"
+            </span>
+            <span className="text-stone-500">: </span>
+          </>
+        )}
+        <span className="text-purple-600 font-medium">{value.toString()}</span>
+        {!isLast && <span className="text-stone-500">,</span>}
+      </div>
+    );
+  }
+
+  if (typeof value === 'number') {
+    return (
+      <div style={{ marginLeft: indent }}>
+        {nodeKey && (
+          <>
+            <span 
+              className="text-sky-600 font-medium cursor-pointer hover:text-orange-500"
+              onClick={(e) => handleCopy(e, path)}
+            >
+              "{nodeKey}"
+            </span>
+            <span className="text-stone-500">: </span>
+          </>
+        )}
+        <span className="text-amber-600 font-medium">{value}</span>
+        {!isLast && <span className="text-stone-500">,</span>}
+      </div>
+    );
+  }
+
+  if (typeof value === 'string') {
+    return (
+      <div style={{ marginLeft: indent }}>
+        {nodeKey && (
+          <>
+            <span 
+              className="text-sky-600 font-medium cursor-pointer hover:text-orange-500"
+              onClick={(e) => handleCopy(e, path)}
+            >
+              "{nodeKey}"
+            </span>
+            <span className="text-stone-500">: </span>
+          </>
+        )}
+        <span className="text-emerald-600">"{value}"</span>
+        {!isLast && <span className="text-stone-500">,</span>}
+      </div>
+    );
+  }
+
+  // Handle arrays
+  if (Array.isArray(value)) {
+    const isCollapsed = collapsedPaths.has(path);
+    const isEmpty = value.length === 0;
+
+    return (
+      <div style={{ marginLeft: indent }}>
+        {nodeKey && (
+          <>
+            <span 
+              className="text-sky-600 font-medium cursor-pointer hover:text-orange-500"
+              onClick={(e) => handleCopy(e, path)}
+            >
+              "{nodeKey}"
+            </span>
+            <span className="text-stone-500">: </span>
+          </>
+        )}
+        {!isEmpty && (
+          <button
+            onClick={() => onToggle(path)}
+            className="inline-flex items-center justify-center w-4 h-4 mr-1 text-white bg-orange-400 hover:bg-orange-500 rounded-full text-xs font-bold"
+          >
+            {isCollapsed ? '+' : '−'}
+          </button>
+        )}
+        <span 
+          className="text-stone-700 font-semibold cursor-pointer hover:text-orange-600"
+          onClick={(e) => handleCopy(e, path)}
+        >
+          [
+        </span>
+        {isEmpty ? (
+          <span className="text-stone-700 font-semibold">]</span>
+        ) : isCollapsed ? (
+          <>
+            <span className="text-stone-400 text-xs ml-1">{value.length} items</span>
+            <span className="text-stone-700 font-semibold">]</span>
+          </>
+        ) : (
+          <>
+            {value.map((item, index) => {
+              const itemPath = path === '' ? `[${index}]` : `${path}[${index}]`;
+              return (
+                <TreeNode
+                  key={index}
+                  nodeKey=""
+                  value={item}
+                  path={itemPath}
+                  depth={depth + 1}
+                  isLast={index === value.length - 1}
+                  collapsedPaths={collapsedPaths}
+                  onToggle={onToggle}
+                  onCopyPath={onCopyPath}
+                />
+              );
+            })}
+            <div style={{ marginLeft: indent }}>
+              <span className="text-stone-700 font-semibold">]</span>
+            </div>
+          </>
+        )}
+        {!isLast && <span className="text-stone-500">,</span>}
+      </div>
+    );
+  }
+
+  // Handle objects
+  if (typeof value === 'object') {
+    const keys = Object.keys(value);
+    const isCollapsed = collapsedPaths.has(path);
+    const isEmpty = keys.length === 0;
+
+    return (
+      <div style={{ marginLeft: indent }}>
+        {nodeKey && (
+          <>
+            <span 
+              className="text-sky-600 font-medium cursor-pointer hover:text-orange-500"
+              onClick={(e) => handleCopy(e, path)}
+            >
+              "{nodeKey}"
+            </span>
+            <span className="text-stone-500">: </span>
+          </>
+        )}
+        {!isEmpty && (
+          <button
+            onClick={() => onToggle(path)}
+            className="inline-flex items-center justify-center w-4 h-4 mr-1 text-white bg-orange-400 hover:bg-orange-500 rounded-full text-xs font-bold"
+          >
+            {isCollapsed ? '+' : '−'}
+          </button>
+        )}
+        <span 
+          className="text-stone-700 font-semibold cursor-pointer hover:text-orange-600"
+          onClick={(e) => handleCopy(e, path)}
+        >
+          {"{"}
+        </span>
+        {isEmpty ? (
+          <span className="text-stone-700 font-semibold">{"}"}</span>
+        ) : isCollapsed ? (
+          <>
+            <span className="text-stone-400 text-xs ml-1">{keys.length} keys</span>
+            <span className="text-stone-700 font-semibold">{"}"}</span>
+          </>
+        ) : (
+          <>
+            {keys.map((key, index) => {
+              const keyPath = path === '' ? key : `${path}.${key}`;
+              return (
+                <TreeNode
+                  key={key}
+                  nodeKey={key}
+                  value={value[key]}
+                  path={keyPath}
+                  depth={depth + 1}
+                  isLast={index === keys.length - 1}
+                  collapsedPaths={collapsedPaths}
+                  onToggle={onToggle}
+                  onCopyPath={onCopyPath}
+                />
+              );
+            })}
+            <div style={{ marginLeft: indent }}>
+              <span className="text-stone-700 font-semibold">{"}"}</span>
+            </div>
+          </>
+        )}
+        {!isLast && <span className="text-stone-500">,</span>}
+      </div>
+    );
+  }
+
+  return <div style={{ marginLeft: indent }}>{String(value)}</div>;
+});
+
+TreeNode.displayName = 'TreeNode';
 
 const JsonTools: React.FC<JsonToolsProps> = ({ state, setState }) => {
   // Destructure state from props
@@ -108,16 +349,19 @@ const JsonTools: React.FC<JsonToolsProps> = ({ state, setState }) => {
     }
   }, [parsedJson, collectAllPaths]);
 
-  // Copy JSON path to clipboard
-  const copyPath = useCallback(async (path: string) => {
-    const jqPath = path.startsWith('[') ? path : `.${path}`;
-    try {
-      await navigator.clipboard.writeText(jqPath);
-      setJqFilter(jqPath);
-    } catch (err) {
+  // Ref to store the filter setter to avoid re-renders
+  const setJqFilterRef = useRef(setJqFilter);
+  setJqFilterRef.current = setJqFilter;
+
+  // Copy JSON path to clipboard - uses ref to avoid triggering tree re-render
+  const copyPath = useCallback((path: string) => {
+    const jqPath = path === '' ? '.' : (path.startsWith('[') ? path : `.${path}`);
+    navigator.clipboard.writeText(jqPath).then(() => {
+      setJqFilterRef.current(jqPath);
+    }).catch(() => {
       // Silently fail
-    }
-  }, [setJqFilter]);
+    });
+  }, []);
 
   // Apply JQ-like filter
   const applyFilter = useCallback(() => {
@@ -272,132 +516,6 @@ const JsonTools: React.FC<JsonToolsProps> = ({ state, setState }) => {
     throw new Error(`Unsupported filter: ${filterPart}`);
   };
 
-  // Render JSON tree recursively
-  const renderTree = useCallback((obj: any, path: string = '', depth: number = 0): React.ReactElement => {
-    const indent = depth * 20;
-
-    if (obj === null) {
-      return <span className="text-stone-400 italic">null</span>;
-    }
-
-    if (typeof obj === 'boolean') {
-      return <span className="text-purple-600 font-medium">{obj.toString()}</span>;
-    }
-
-    if (typeof obj === 'number') {
-      return <span className="text-amber-600 font-medium">{obj}</span>;
-    }
-
-    if (typeof obj === 'string') {
-      return <span className="text-emerald-600">"{obj}"</span>;
-    }
-
-    if (Array.isArray(obj)) {
-      const isCollapsed = collapsedPaths.has(path);
-      const isEmpty = obj.length === 0;
-
-      if (isEmpty) {
-        return <span className="text-stone-700 font-semibold">[]</span>;
-      }
-
-      return (
-        <span>
-          <button
-            onClick={() => toggleCollapse(path)}
-            className="inline-flex items-center justify-center w-4 h-4 mr-1 text-white bg-orange-400 hover:bg-orange-500 rounded-full text-xs font-bold transition-colors"
-            title={isCollapsed ? "Expand" : "Collapse"}
-          >
-            {isCollapsed ? '+' : '−'}
-          </button>
-          <span 
-            className="text-stone-700 font-semibold cursor-pointer hover:text-orange-600"
-            onClick={() => copyPath(path)}
-            title={`Click to copy path: ${path || '.'}`}
-          >
-            [
-          </span>
-          {isCollapsed ? (
-            <span className="text-stone-400 text-xs ml-1">{obj.length} items</span>
-          ) : (
-            <>
-              {obj.map((item, index) => {
-                const itemPath = path === '' ? `[${index}]` : `${path}[${index}]`;
-                return (
-                  <div key={index} style={{ marginLeft: indent + 20 }}>
-                    <span 
-                      className="text-stone-400 text-xs mr-2 cursor-pointer hover:text-orange-500"
-                      onClick={() => copyPath(itemPath)}
-                      title={`Click to copy: ${itemPath}`}
-                    >
-                      {index}:
-                    </span>
-                    {renderTree(item, itemPath, depth + 1)}
-                    {index < obj.length - 1 && <span className="text-stone-500">,</span>}
-                  </div>
-                );
-              })}
-            </>
-          )}
-          <span className="text-stone-700 font-semibold">]</span>
-        </span>
-      );
-    }
-
-    if (typeof obj === 'object') {
-      const keys = Object.keys(obj);
-      const isCollapsed = collapsedPaths.has(path);
-      const isEmpty = keys.length === 0;
-
-      if (isEmpty) {
-        return <span className="text-stone-700 font-semibold">{"{}"}</span>;
-      }
-
-      return (
-        <span>
-          <button
-            onClick={() => toggleCollapse(path)}
-            className="inline-flex items-center justify-center w-4 h-4 mr-1 text-white bg-orange-400 hover:bg-orange-500 rounded-full text-xs font-bold transition-colors"
-            title={isCollapsed ? "Expand" : "Collapse"}
-          >
-            {isCollapsed ? '+' : '−'}
-          </button>
-          <span 
-            className="text-stone-700 font-semibold cursor-pointer hover:text-orange-600"
-            onClick={() => copyPath(path)}
-            title={`Click to copy path: ${path || '.'}`}
-          >
-            {"{"}
-          </span>
-          {isCollapsed ? (
-            <span className="text-stone-400 text-xs ml-1">{keys.length} keys</span>
-          ) : (
-            <>
-              {keys.map((key, index) => {
-                const keyPath = path === '' ? key : `${path}.${key}`;
-                return (
-                  <div key={key} style={{ marginLeft: indent + 20 }}>
-                    <span 
-                      className="text-sky-600 font-medium cursor-pointer hover:text-orange-500"
-                      onClick={() => copyPath(keyPath)}
-                      title={`Click to copy: .${keyPath}`}
-                    >
-                      "{key}"
-                    </span>
-                    <span className="text-stone-500">: </span>
-                    {renderTree(obj[key], keyPath, depth + 1)}
-                    {index < keys.length - 1 && <span className="text-stone-500">,</span>}
-                  </div>
-                );
-              })}
-            </>
-          )}
-          <span className="text-stone-700 font-semibold">{"}"}</span>
-        </span>
-      );
-    }
-
-    return <span>{String(obj)}</span>;
-  }, [collapsedPaths, toggleCollapse, copyPath]);
 
   // Handle copy to clipboard
   const handleCopy = async (text: string, type: 'input' | 'tree' | 'filter') => {
@@ -518,7 +636,16 @@ const JsonTools: React.FC<JsonToolsProps> = ({ state, setState }) => {
           <div className="w-full h-[500px] p-4 border border-stone-200 rounded-xl bg-stone-50 overflow-auto font-mono text-sm">
             {parsedJson ? (
               <div className="whitespace-pre-wrap">
-                {renderTree(parsedJson)}
+                <TreeNode
+                  nodeKey=""
+                  value={parsedJson}
+                  path=""
+                  depth={0}
+                  isLast={true}
+                  collapsedPaths={collapsedPaths}
+                  onToggle={toggleCollapse}
+                  onCopyPath={copyPath}
+                />
               </div>
             ) : (
               <div className="text-stone-400 text-center py-20">
