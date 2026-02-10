@@ -227,17 +227,6 @@ const TreeNode = memo(({
   }
 
   return <div style={{ marginLeft: indent }}>{String(value)}</div>;
-}, (prevProps, nextProps) => {
-  // Custom comparison - only re-render if these specific props change
-  return (
-    prevProps.value === nextProps.value &&
-    prevProps.path === nextProps.path &&
-    prevProps.nodeKey === nextProps.nodeKey &&
-    prevProps.isLast === nextProps.isLast &&
-    prevProps.depth === nextProps.depth &&
-    prevProps.searchTerm === nextProps.searchTerm &&
-    prevProps.getIsCollapsed(prevProps.path) === nextProps.getIsCollapsed(nextProps.path)
-  );
 });
 
 TreeNode.displayName = 'TreeNode';
@@ -514,7 +503,7 @@ const JsonTools: React.FC<JsonToolsProps> = ({ state, setState }) => {
     setSearchTerm('');
   };
 
-  // Memoize the tree to prevent re-renders on unrelated state changes
+  // Render tree - include collapsedPaths in dependency to re-render on toggle
   const treeElement = useMemo(() => {
     if (!parsedJson) return null;
     return (
@@ -524,14 +513,14 @@ const JsonTools: React.FC<JsonToolsProps> = ({ state, setState }) => {
         path=""
         depth={0}
         isLast={true}
-        isCollapsed={getIsCollapsed('')}
+        isCollapsed={collapsedPaths[''] === true}
         searchTerm={searchTerm}
         onToggle={toggleCollapse}
         onCopyPath={copyPath}
         getIsCollapsed={getIsCollapsed}
       />
     );
-  }, [parsedJson, getIsCollapsed, searchTerm, toggleCollapse, copyPath]);
+  }, [parsedJson, collapsedPaths, searchTerm, toggleCollapse, copyPath, getIsCollapsed]);
 
   return (
     <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
