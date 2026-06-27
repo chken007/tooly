@@ -12,7 +12,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react"
 type EncodingType = 'base64' | 'url' | 'jwt' | 'hex' | 'unicode';
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState('converter');
+  const [activeTab, setActiveTab] = useState('json');
   const location = useLocation();
 
   // SmartConverter state
@@ -51,11 +51,11 @@ function AppContent() {
   });
 
   const tabs = [
+    { id: 'json', label: 'JSON Tools' },
     { id: 'converter', label: 'Smart Converter' },
     { id: 'diff', label: 'Diff Master' },
     { id: 'wizard', label: 'List Wizard' },
-    { id: 'time', label: 'Time Converter' },
-    { id: 'json', label: 'JSON Tools' }
+    { id: 'time', label: 'Time Converter' }
   ];
 
   // If we're on the about page, don't show the main app layout
