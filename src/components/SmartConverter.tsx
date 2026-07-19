@@ -154,9 +154,9 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
           fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
           
           // 4. Try to fix incomplete objects/arrays
-          let openBraces = (fixed.match(/{/g) || []).length;
+          const openBraces = (fixed.match(/{/g) || []).length;
           let closeBraces = (fixed.match(/}/g) || []).length;
-          let openBrackets = (fixed.match(/\[/g) || []).length;
+          const openBrackets = (fixed.match(/\[/g) || []).length;
           let closeBrackets = (fixed.match(/\]/g) || []).length;
           
           // Add missing closing braces/brackets
@@ -394,17 +394,15 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
     }
 
     // Check if it's valid JSON first
-    let isValidJSON = false;
-    let parsedData: any = null;
-    
-    try {
-      parsedData = JSON.parse(jsonString);
-      isValidJSON = true;
-    } catch {
-      isValidJSON = false;
-    }
+    const parsedData: any = (() => {
+      try {
+        return JSON.parse(jsonString);
+      } catch {
+        return null;
+      }
+    })();
 
-    if (isValidJSON && parsedData && (typeof parsedData === 'object')) {
+    if (parsedData && typeof parsedData === 'object') {
       // Valid JSON - render with collapsible structure
       return (
         <div className="whitespace-pre-wrap font-mono text-sm">
@@ -415,7 +413,7 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
       // Invalid JSON - fall back to simple syntax highlighting
       const lines = jsonString.split('\n');
       const highlightedLines = lines.map((line, index) => {
-        let highlighted = escapeHtml(line)
+        const highlighted = escapeHtml(line)
           // Highlight quoted strings (both valid and invalid)
           .replace(/"([^"]*)":/g, '<span class="text-orange-500 font-semibold">"$1"</span>:')
           .replace(/:\s*"([^"]*)"/g, ': <span class="text-green-600">"$1"</span>')
