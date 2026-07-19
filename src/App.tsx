@@ -5,6 +5,8 @@ import TextDiffTool from './components/TextDiffTool';
 import ListWizard from './components/ListWizard';
 import TimeConverter from './components/TimeConverter';
 import JsonTools from './components/JsonTools';
+import DataConverter from './components/DataConverter';
+import RegexTester from './components/RegexTester';
 import About from './components/About';
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/react"
@@ -50,12 +52,28 @@ function AppContent() {
     jqFilter: '',
   });
 
+  const [dataConverterState, setDataConverterState] = useState({
+    input: '',
+    output: '',
+    sourceFormat: 'json' as 'json' | 'csv' | 'yaml',
+    targetFormat: 'csv' as 'json' | 'csv' | 'yaml',
+  });
+
+  const [regexState, setRegexState] = useState({
+    pattern: '',
+    flags: 'g',
+    testText: '',
+    replacement: '',
+  });
+
   const tabs = [
     { id: 'json', label: 'JSON Tools' },
-    { id: 'converter', label: 'Smart Converter' },
+    { id: 'data', label: 'Data Converter' },
+    { id: 'regex', label: 'Regex Tester' },
     { id: 'diff', label: 'Diff Master' },
+    { id: 'converter', label: 'Smart Converter' },
+    { id: 'time', label: 'Time Converter' },
     { id: 'wizard', label: 'List Wizard' },
-    { id: 'time', label: 'Time Converter' }
   ];
 
   // If we're on the about page, don't show the main app layout
@@ -130,6 +148,12 @@ function AppContent() {
         )}
         {activeTab === 'json' && (
           <JsonTools state={jsonState} setState={setJsonState} />
+        )}
+        {activeTab === 'data' && (
+          <DataConverter state={dataConverterState} setState={setDataConverterState} />
+        )}
+        {activeTab === 'regex' && (
+          <RegexTester state={regexState} setState={setRegexState} />
         )}
       </main>
 

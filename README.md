@@ -9,6 +9,8 @@ Try it at [tooly.one](https://www.tooly.one/).
 ## Features
 
 - **JSON Tools** — Format, search, explore, and filter JSON with a focused jq-like path syntax.
+- **Data Converter** — Convert between JSON, CSV, and YAML with safe spreadsheet output.
+- **Regex Tester** — Test JavaScript regular expressions with captures, replacements, and execution timeouts.
 - **Smart Converter** — Encode and decode Base64, Base64URL, URL, JWT, UTF-8 Hex, and Unicode escapes.
 - **Diff Master** — Compare text by line or character, including normalized JSON comparison.
 - **List Wizard** — Calculate intersections, unions, differences, and symmetric differences.
