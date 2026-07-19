@@ -95,7 +95,7 @@ function AppContent() {
 
       {/* Tab Navigation */}
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="border-b border-stone-200 overflow-x-auto">
+        <div className="border-b border-stone-200 overflow-x-auto sm:overflow-visible">
           <nav className="-mb-px flex w-max min-w-full space-x-1 sm:space-x-6">
             {tabs.map((tab) => (
               <button
