@@ -331,7 +331,7 @@ const TextDiffTool: React.FC<TextDiffToolProps> = ({ state, setState }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+    <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-4 sm:p-6">
       <h2 className="text-xl font-semibold text-stone-900 mb-6 tracking-tight">Text Diff Tool</h2>
       
       {/* Input Section */}
@@ -496,4 +496,4 @@ const TextDiffTool: React.FC<TextDiffToolProps> = ({ state, setState }) => {
   );
 };
 
-export default TextDiffTool; 
+export default TextDiffTool;
