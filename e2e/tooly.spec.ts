@@ -26,3 +26,21 @@ test('keeps the page within the mobile viewport', async ({ page }, testInfo) => 
   await expect(page.getByRole('button', { name: 'Time Converter' })).toBeVisible();
 });
 
+test('converts JSON to CSV', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Data Converter' }).click();
+  await page.getByLabel('Input').fill('[{"name":"Ada","active":true}]');
+  await page.getByRole('button', { name: 'Convert', exact: true }).click();
+
+  await expect(page.getByLabel('Output')).toHaveValue('name,active\nAda,true');
+});
+
+test('tests a regular expression in a worker', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Regex Tester' }).click();
+  await page.getByLabel('Regular Expression').fill('foo-(\\d+)');
+  await page.getByLabel('Test Text').fill('foo-1 and foo-22');
+
+  await expect(page.getByText('foo-1', { exact: true })).toBeVisible();
+  await expect(page.getByText('foo-22', { exact: true })).toBeVisible();
+});
