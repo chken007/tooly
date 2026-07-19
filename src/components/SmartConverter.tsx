@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   decodeBase64,
   decodeHex,
@@ -10,6 +10,8 @@ import {
   encodeUnicode,
   encodeUrl,
 } from '../utils/encoding';
+import { sortJSON } from '../utils/formatters';
+import { beautifyLooseJson } from '../utils/looseJson';
 
 type EncodingType = 'base64' | 'url' | 'jwt' | 'hex' | 'unicode';
 
@@ -44,46 +46,18 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
   const { leftText, rightText, encodingType, isHighlightMode, isSorted, isBeautified } = state;
   
   // Helper functions to update specific parts of state
-  const setLeftText = (value: string) => setState(prev => ({ ...prev, leftText: value }));
-  const setRightText = (value: string) => setState(prev => ({ ...prev, rightText: value }));
-  const setEncodingType = (value: EncodingType) => setState(prev => ({ ...prev, encodingType: value }));
-  const setIsHighlightMode = (value: boolean) => setState(prev => ({ ...prev, isHighlightMode: value }));
-  const setIsSorted = (value: boolean) => setState(prev => ({ ...prev, isSorted: value }));
-  const setIsBeautified = (value: boolean) => setState(prev => ({ ...prev, isBeautified: value }));
+  const setLeftText = useCallback((value: string) => setState(prev => ({ ...prev, leftText: value })), [setState]);
+  const setRightText = useCallback((value: string) => setState(prev => ({ ...prev, rightText: value })), [setState]);
+  const setEncodingType = useCallback((value: EncodingType) => setState(prev => ({ ...prev, encodingType: value })), [setState]);
+  const setIsHighlightMode = useCallback((value: boolean) => setState(prev => ({ ...prev, isHighlightMode: value })), [setState]);
+  const setIsSorted = useCallback((value: boolean) => setState(prev => ({ ...prev, isSorted: value })), [setState]);
+  const setIsBeautified = useCallback((value: boolean) => setState(prev => ({ ...prev, isBeautified: value })), [setState]);
   
   // Local state (not persisted across tabs)
   const [error, setError] = useState('');
   const [lastModified, setLastModified] = useState<'left' | 'right' | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<'left' | 'right' | null>(null);
   const [collapsedPaths, setCollapsedPaths] = useState<Set<string>>(new Set());
-  const highlightRef = useRef<HTMLDivElement>(null);
-
-  // JSON Sort function - recursively sorts all object keys (case-sensitive, standard behavior)
-  const sortJSON = useCallback((obj: any): any => {
-    if (obj === null || obj === undefined) {
-      return obj;
-    }
-
-    // Handle arrays - recursively sort contents
-    if (Array.isArray(obj)) {
-      return obj.map(item => sortJSON(item));
-    }
-
-    // Handle objects - sort keys alphabetically (case-sensitive like standard libraries)
-    if (typeof obj === 'object') {
-      const sortedObj: any = {};
-      const keys = Object.keys(obj).sort();
-      
-      keys.forEach(key => {
-        sortedObj[key] = sortJSON(obj[key]);
-      });
-      
-      return sortedObj;
-    }
-
-    // Primitive values - return as is
-    return obj;
-  }, []);
 
   const handleSort = useCallback(() => {
     if (!rightText.trim()) {
@@ -102,10 +76,10 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
       setIsBeautified(true);
       setIsHighlightMode(false); // Exit highlight mode
       setLastModified('right');
-    } catch (err) {
+    } catch {
       setError('Cannot sort: Invalid JSON format');
     }
-  }, [rightText, sortJSON]);
+  }, [rightText, setIsBeautified, setIsHighlightMode, setIsSorted, setRightText]);
 
   const handleBeautify = useCallback(() => {
     if (!rightText.trim()) {
@@ -114,136 +88,18 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
     }
 
     try {
-      const trimmed = rightText.trim();
-      let beautified = trimmed;
-      let needsFormatting = true;
-      
-      // Check if content is already properly beautified JSON
-      const isAlreadyBeautifiedJSON = (() => {
-        try {
-          const parsed = JSON.parse(trimmed);
-          const standardFormat = JSON.stringify(parsed, null, 2);
-          // Compare with standard format - must match exactly
-          return trimmed === standardFormat;
-        } catch {
-          return false;
-        }
-      })();
-
-      if (isAlreadyBeautifiedJSON) {
-        // Content is already beautified in standard format
-        needsFormatting = false;
-        beautified = trimmed;
-      } else if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-      // Enhanced robust JSON beautification
-        // Try standard JSON first
-        try {
-          const parsed = JSON.parse(trimmed);
-          beautified = JSON.stringify(parsed, null, 2);
-        } catch {
-          // Apply robust fixes for common JSON issues
-          let fixed = trimmed;
-          
-          // 1. Add missing quotes around keys
-          fixed = fixed.replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":');
-          
-          // 2. Fix single quotes to double quotes
-          fixed = fixed.replace(/'/g, '"');
-          
-          // 3. Remove trailing commas
-          fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
-          
-          // 4. Try to fix incomplete objects/arrays
-          const openBraces = (fixed.match(/{/g) || []).length;
-          let closeBraces = (fixed.match(/}/g) || []).length;
-          const openBrackets = (fixed.match(/\[/g) || []).length;
-          let closeBrackets = (fixed.match(/\]/g) || []).length;
-          
-          // Add missing closing braces/brackets
-          while (openBraces > closeBraces) {
-            fixed += '}';
-            closeBraces++;
-          }
-          while (openBrackets > closeBrackets) {
-            fixed += ']';
-            closeBrackets++;
-          }
-          
-          // Try to parse the fixed version
-          try {
-            const parsed = JSON.parse(fixed);
-            beautified = JSON.stringify(parsed, null, 2);
-          } catch {
-            // If still fails, try partial line-by-line processing
-            const lines = trimmed.split('\n');
-            const processedLines: string[] = [];
-            
-            for (const line of lines) {
-              const trimmedLine = line.trim();
-              
-              // Try to parse individual lines as JSON
-              try {
-                const parsed = JSON.parse(trimmedLine);
-                processedLines.push(JSON.stringify(parsed, null, 2));
-              } catch {
-                // Try to extract and beautify JSON-like patterns
-                const jsonPattern = /\{[^{}]*\}/g;
-                const matches = trimmedLine.match(jsonPattern);
-                
-                if (matches) {
-                  let processedLine = trimmedLine;
-                  for (const match of matches) {
-                    try {
-                      const parsed = JSON.parse(match);
-                      const beautifiedMatch = JSON.stringify(parsed, null, 2);
-                      processedLine = processedLine.replace(match, beautifiedMatch);
-                    } catch {
-                      // Keep original if can't parse
-                    }
-                  }
-                  processedLines.push(processedLine);
-                } else {
-                  processedLines.push(line); // Keep original line
-                }
-              }
-            }
-            
-            beautified = processedLines.join('\n');
-          }
-        }
-      } else {
-        // Try standard JSON parsing for non-obvious JSON
-        try {
-          const parsed = JSON.parse(trimmed);
-          beautified = JSON.stringify(parsed, null, 2);
-        } catch {
-          // Not JSON, keep original
-          beautified = trimmed;
-        }
-      }
-      
-      // Always update state when Beautify is clicked
-      if (needsFormatting && beautified !== trimmed) {
-        // Content was formatted
+      const beautified = beautifyLooseJson(rightText);
+      if (beautified !== rightText.trim()) {
         setRightText(beautified);
-      setError('');
-        setIsBeautified(true);
-        setIsHighlightMode(false);
         setLastModified('right');
-      } else if (!needsFormatting) {
-        // Content was already beautified, just update the button state
-        setError('');
-        setIsBeautified(true);
-        setIsHighlightMode(false);
-      } else {
-        // Could not beautify
-        setError('Content could not be beautified');
       }
-      
+      setError('');
+      setIsBeautified(true);
+      setIsHighlightMode(false);
     } catch (err) {
       setError('Failed to beautify content: ' + (err instanceof Error ? err.message : 'Unknown error'));
     }
-  }, [rightText]);
+  }, [rightText, setIsBeautified, setIsHighlightMode, setRightText]);
 
   // Toggle collapse/expand for a path and its direct children
   const toggleCollapse = useCallback((path: string, obj: any) => {
@@ -508,15 +364,8 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
     rightText, 
     encodingType, 
     lastModified, 
-    encodeBase64, 
-    decodeBase64, 
-    decodeJwt,
-    encodeUrl,
-    decodeUrl,
-    encodeHex, 
-    decodeHex, 
-    encodeUnicode, 
-    decodeUnicode
+    setLeftText,
+    setRightText,
   ]);
 
   const handleLeftTextChange = (value: string) => {
@@ -620,7 +469,7 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
     } catch {
       setError('Cannot highlight: Invalid JSON format');
     }
-  }, [rightText, isHighlightMode]);
+  }, [rightText, isHighlightMode, setIsHighlightMode]);
 
   // Convert based on which panel was last modified
 
@@ -858,7 +707,6 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
               /* Highlight Mode: Read-only, collapsible, syntax highlighted */
               <div 
                 className="w-full h-[900px] p-4 border border-stone-200 rounded-xl font-mono text-sm overflow-auto bg-white"
-                ref={highlightRef}
               >
                 {highlightJSON(rightText)}
               </div>
