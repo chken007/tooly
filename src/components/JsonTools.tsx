@@ -523,7 +523,7 @@ const JsonTools: React.FC<JsonToolsProps> = ({ state, setState }) => {
   }, [parsedJson, collapsedPaths, searchTerm, toggleCollapse, copyPath, getIsCollapsed]);
 
   return (
-    <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+    <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-4 sm:p-6">
       <h2 className="text-xl font-semibold text-stone-900 mb-6 tracking-tight">JSON Tools</h2>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

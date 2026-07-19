@@ -1,6 +1,24 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  decodeBase64,
+  decodeHex,
+  decodeJwt,
+  decodeUnicode,
+  decodeUrl,
+  encodeBase64,
+  encodeHex,
+  encodeUnicode,
+  encodeUrl,
+} from '../utils/encoding';
 
 type EncodingType = 'base64' | 'url' | 'jwt' | 'hex' | 'unicode';
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
 
 interface SmartConverterProps {
   state: {
@@ -39,164 +57,6 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
   const [copyFeedback, setCopyFeedback] = useState<'left' | 'right' | null>(null);
   const [collapsedPaths, setCollapsedPaths] = useState<Set<string>>(new Set());
   const highlightRef = useRef<HTMLDivElement>(null);
-
-  // Robust Base64 decoder that can handle partial invalid strings
-  const robustBase64Decode = useCallback((input: string): string => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-    let result = '';
-    let buffer = 0;
-    let bitsCollected = 0;
-    
-    for (let i = 0; i < input.length; i++) {
-      const char = input[i];
-      if (char === '=') break; // Stop at padding
-      
-      const charIndex = chars.indexOf(char);
-      if (charIndex === -1) continue; // Skip invalid characters
-      
-      buffer = (buffer << 6) | charIndex;
-      bitsCollected += 6;
-      
-      if (bitsCollected >= 8) {
-        bitsCollected -= 8;
-        const byte = (buffer >> bitsCollected) & 0xFF;
-        result += String.fromCharCode(byte);
-      }
-    }
-
-    try {
-      return decodeURIComponent(escape(result));
-    } catch {
-      return result; // Return raw result if UTF-8 decoding fails
-    }
-  }, []);
-
-  // Base64 functions - Robust implementation
-  const encodeBase64 = useCallback((text: string): string => {
-    try {
-      return btoa(unescape(encodeURIComponent(text)));
-    } catch (error) {
-      throw new Error('Failed to encode as Base64');
-    }
-  }, []);
-
-  const decodeBase64 = useCallback((text: string): string => {
-    try {
-      // Clean the input - remove whitespace and non-base64 characters
-      let cleanInput = text.replace(/[^A-Za-z0-9+/]/g, '');
-      
-      // Add padding if missing
-      while (cleanInput.length % 4) {
-        cleanInput += '=';
-      }
-
-      // Try standard atob first
-      try {
-        return decodeURIComponent(escape(atob(cleanInput)));
-      } catch {
-        // If atob fails, try manual decoding for partial recovery
-        return robustBase64Decode(cleanInput);
-      }
-    } catch (error) {
-      throw new Error('Invalid Base64 string');
-    }
-  }, [robustBase64Decode]);
-
-  // URL encoding functions
-  const encodeURL = useCallback((text: string): string => {
-    try {
-      return encodeURIComponent(text);
-    } catch (error) {
-      throw new Error('Failed to encode as URL');
-    }
-  }, []);
-
-  const decodeURL = useCallback((text: string): string => {
-    try {
-      return decodeURIComponent(text);
-    } catch (error) {
-      throw new Error('Invalid URL encoded string');
-    }
-  }, []);
-
-  // JWT functions
-  const decodeJWT = useCallback((token: string): string => {
-    try {
-      const parts = token.split('.');
-      if (parts.length !== 3) {
-        throw new Error('Invalid JWT format');
-      }
-      
-      const header = JSON.parse(decodeBase64(parts[0]));
-      const payload = JSON.parse(decodeBase64(parts[1]));
-      
-      return JSON.stringify({
-        header,
-        payload,
-        signature: parts[2]
-      });
-    } catch (error) {
-      throw new Error('Invalid JWT token');
-    }
-  }, [decodeBase64]);
-
-  // Hex/ASCII functions
-  const encodeHex = useCallback((text: string): string => {
-    try {
-      return text.split('').map(char => 
-        char.charCodeAt(0).toString(16).padStart(2, '0')
-      ).join(' ');
-    } catch (error) {
-      throw new Error('Failed to encode as Hex');
-    }
-  }, []);
-
-  const decodeHex = useCallback((hex: string): string => {
-    try {
-      const cleanHex = hex.replace(/\s+/g, '');
-      if (cleanHex.length % 2 !== 0) {
-        throw new Error('Invalid hex string length');
-      }
-      
-      let result = '';
-      for (let i = 0; i < cleanHex.length; i += 2) {
-        const hexPair = cleanHex.substr(i, 2);
-        const charCode = parseInt(hexPair, 16);
-        if (isNaN(charCode)) {
-          throw new Error('Invalid hex character');
-        }
-        result += String.fromCharCode(charCode);
-    }
-      return result;
-    } catch (error) {
-      throw new Error('Invalid hex string');
-    }
-  }, []);
-
-  // Unicode Escape functions
-  const encodeUnicode = useCallback((text: string): string => {
-    try {
-      return text.split('').map(char => {
-        const code = char.charCodeAt(0);
-        if (code > 127) {
-          return '\\u' + code.toString(16).padStart(4, '0');
-        }
-        return char;
-      }).join('');
-    } catch (error) {
-      throw new Error('Failed to encode as Unicode');
-    }
-  }, []);
-
-  const decodeUnicode = useCallback((text: string): string => {
-    try {
-      return text.replace(/\\u([0-9a-fA-F]{4})/g, (_match, code) => {
-        return String.fromCharCode(parseInt(code, 16));
-      });
-    } catch (error) {
-      throw new Error('Invalid Unicode escape string');
-    }
-  }, []);
 
   // JSON Sort function - recursively sorts all object keys (case-sensitive, standard behavior)
   const sortJSON = useCallback((obj: any): any => {
@@ -555,7 +415,7 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
       // Invalid JSON - fall back to simple syntax highlighting
       const lines = jsonString.split('\n');
       const highlightedLines = lines.map((line, index) => {
-        let highlighted = line
+        let highlighted = escapeHtml(line)
           // Highlight quoted strings (both valid and invalid)
           .replace(/"([^"]*)":/g, '<span class="text-orange-500 font-semibold">"$1"</span>:')
           .replace(/:\s*"([^"]*)"/g, ': <span class="text-green-600">"$1"</span>')
@@ -600,9 +460,9 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
         if (encodingType === 'base64') {
           result = decodeBase64(leftText);
         } else if (encodingType === 'url') {
-          result = decodeURL(leftText);
+          result = decodeUrl(leftText);
         } else if (encodingType === 'jwt') {
-          result = decodeJWT(leftText);
+          result = decodeJwt(leftText);
         } else if (encodingType === 'hex') {
           result = decodeHex(leftText);
         } else if (encodingType === 'unicode') {
@@ -623,7 +483,7 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
         if (encodingType === 'base64') {
           result = encodeBase64(rightText);
         } else if (encodingType === 'url') {
-          result = encodeURL(rightText);
+          result = encodeUrl(rightText);
         } else if (encodingType === 'jwt') {
           // JWT is decode-only, can't encode plain text to JWT
           throw new Error('JWT encoding not supported - JWT is decode-only');
@@ -652,9 +512,9 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
     lastModified, 
     encodeBase64, 
     decodeBase64, 
-    decodeJWT, 
-    encodeURL, 
-    decodeURL, 
+    decodeJwt,
+    encodeUrl,
+    decodeUrl,
     encodeHex, 
     decodeHex, 
     encodeUnicode, 
@@ -821,7 +681,7 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
   }, [rightText]);
 
   return (
-    <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+    <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-4 sm:p-6">
       <h2 className="text-xl font-semibold text-stone-900 mb-6 tracking-tight">Smart Converter</h2>
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -1037,4 +897,4 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
   );
 };
 
-export default SmartConverter; 
+export default SmartConverter;

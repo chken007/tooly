@@ -67,7 +67,7 @@ function AppContent() {
     <div className="min-h-screen bg-stone-50">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-stone-200 sticky top-0 z-50">
-        <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               {/* Logo */}
@@ -94,14 +94,14 @@ function AppContent() {
       </header>
 
       {/* Tab Navigation */}
-      <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="border-b border-stone-200">
-          <nav className="-mb-px flex space-x-1 sm:space-x-6">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <div className="border-b border-stone-200 overflow-x-auto">
+          <nav className="-mb-px flex w-max min-w-full space-x-1 sm:space-x-6">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-3 px-3 border-b-2 font-medium text-sm transition-all duration-200 ${
+                className={`flex-shrink-0 whitespace-nowrap py-3 px-3 border-b-2 font-medium text-sm transition-all duration-200 ${
                   activeTab === tab.id
                     ? 'border-orange-500 text-orange-600'
                     : 'border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300'
@@ -115,7 +115,7 @@ function AppContent() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeTab === 'converter' && (
           <SmartConverter state={converterState} setState={setConverterState} />
         )}
@@ -135,7 +135,7 @@ function AppContent() {
 
       {/* Footer */}
       <footer className="bg-white border-t border-stone-200 mt-8">
-        <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="text-center text-sm text-stone-500">
             Have feedback? Open an issue on{' '}
             <a 
