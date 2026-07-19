@@ -35,9 +35,12 @@
     "typescript",
     "utilities"
   ],
-  "author": "Your Name",
+  "author": "Heng Cui",
   "license": "MIT",
-  "homepage": ".",
+  "homepage": "https://www.tooly.one/",
+  "engines": {
+    "node": ">=20.19"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/chken007/tooly.git"
