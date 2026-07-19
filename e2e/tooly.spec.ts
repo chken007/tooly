@@ -44,3 +44,23 @@ test('tests a regular expression in a worker', async ({ page }) => {
   await expect(page.getByText('foo-1', { exact: true })).toBeVisible();
   await expect(page.getByText('foo-22', { exact: true })).toBeVisible();
 });
+
+test('remembers the active tab without persisting its content', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Regex Tester' }).click();
+  await page.getByLabel('Test Text').fill('temporary content');
+
+  await page.reload();
+
+  await expect(page.getByRole('heading', { name: 'Regex Tester' })).toBeVisible();
+  await expect(page.getByLabel('Test Text')).toHaveValue('');
+});
+
+test('falls back to JSON Tools for an unknown saved tab', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.setItem('tooly.activeTab.v1', 'removed-tab'));
+
+  await page.reload();
+
+  await expect(page.getByRole('heading', { name: 'JSON Tools' })).toBeVisible();
+});

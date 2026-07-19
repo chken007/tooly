@@ -8,13 +8,19 @@ import JsonTools from './components/JsonTools';
 import DataConverter from './components/DataConverter';
 import RegexTester from './components/RegexTester';
 import About from './components/About';
+import {
+  loadActiveTab,
+  saveActiveTab,
+  TAB_DEFINITIONS,
+  type TabId,
+} from './utils/tabPreference';
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/react"
 
 type EncodingType = 'base64' | 'url' | 'jwt' | 'hex' | 'unicode';
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState('json');
+  const [activeTab, setActiveTab] = useState<TabId>(loadActiveTab);
   const location = useLocation();
 
   // SmartConverter state
@@ -66,15 +72,10 @@ function AppContent() {
     replacement: '',
   });
 
-  const tabs = [
-    { id: 'json', label: 'JSON Tools' },
-    { id: 'data', label: 'Data Converter' },
-    { id: 'regex', label: 'Regex Tester' },
-    { id: 'diff', label: 'Diff Master' },
-    { id: 'converter', label: 'Smart Converter' },
-    { id: 'time', label: 'Time Converter' },
-    { id: 'wizard', label: 'List Wizard' },
-  ];
+  const handleTabChange = (tabId: TabId) => {
+    saveActiveTab(tabId);
+    setActiveTab(tabId);
+  };
 
   // If we're on the about page, don't show the main app layout
   if (location.pathname === '/about') {
@@ -115,10 +116,10 @@ function AppContent() {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         <div className="border-b border-stone-200 overflow-x-auto sm:overflow-visible">
           <nav className="-mb-px flex w-max min-w-full space-x-1 sm:space-x-6">
-            {tabs.map((tab) => (
+            {TAB_DEFINITIONS.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`flex-shrink-0 whitespace-nowrap py-3 px-3 border-b-2 font-medium text-sm transition-all duration-200 ${
                   activeTab === tab.id
                     ? 'border-orange-500 text-orange-600'
