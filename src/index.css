@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 @layer base {
   :root {
@@ -66,20 +64,28 @@
 }
 
 @layer utilities {
-    .dark .bg-white { background-color: var(--color-surface); }
+    .dark .bg-white,
+    .dark .card,
+    .dark .input-field { background-color: var(--color-surface); }
     .dark .bg-white\/80 { background-color: rgb(33 31 29 / 0.8); }
     .dark .bg-stone-50 { background-color: var(--color-bg); }
     .dark .bg-stone-100,
+    .dark .btn-secondary,
     .dark .hover\:bg-stone-100:hover { background-color: #292524; }
     .dark .bg-stone-200,
+    .dark .btn-secondary:hover,
     .dark .hover\:bg-stone-200:hover { background-color: #44403c; }
-    .dark .border-stone-200 { border-color: #44403c; }
+    .dark .border-stone-200,
+    .dark .card,
+    .dark .input-field { border-color: #44403c; }
     .dark .border-stone-300,
     .dark .hover\:border-stone-300:hover { border-color: #57534e; }
     .dark .text-stone-900,
+    .dark .input-field,
     .dark .text-stone-800,
     .dark .hover\:text-stone-900:hover { color: #fafaf9; }
     .dark .text-stone-700,
+    .dark .btn-secondary,
     .dark .hover\:text-stone-700:hover { color: #e7e5e4; }
     .dark .text-stone-600 { color: #d6d3d1; }
     .dark .text-stone-500 { color: #a8a29e; }

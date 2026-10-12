@@ -30,7 +30,7 @@ test('theme defaults to the OS, follows changes, and remembers explicit choices'
 test('dark mode applies readable surfaces to every tool and About', async ({ page }) => {
   await page.goto('/');
   await page.getByLabel('Theme').selectOption('dark');
-  for (const name of ['Smart Converter', 'Diff Master', 'List Wizard', 'Time Converter', 'JSON Tools']) {
+  for (const name of ['Smart Converter', 'Diff Master', 'List Wizard', 'Time Converter', 'Data Converter', 'Regex Tester', 'JSON Tools']) {
     await page.getByRole('button', { name, exact: true }).click();
     const textarea = page.locator('textarea').first();
     const colors = await textarea.evaluate(element => {
@@ -40,7 +40,15 @@ test('dark mode applies readable surfaces to every tool and About', async ({ pag
     expect(colors.background).not.toBe('rgb(255, 255, 255)');
     expect(colors.color).not.toBe('rgb(28, 25, 23)');
     if (name === 'JSON Tools') {
-      await expect(page.getByRole('button', { name: 'Immersive view' })).not.toHaveCSS('background-color', 'rgb(245, 245, 244)');
+      const brightness = await page.getByRole('button', { name: 'Immersive view' }).evaluate(element => {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d')!;
+        context.fillStyle = getComputedStyle(element).backgroundColor;
+        context.fillRect(0, 0, 1, 1);
+        const [red, green, blue] = context.getImageData(0, 0, 1, 1).data;
+        return (red + green + blue) / (3 * 255);
+      });
+      expect(brightness).toBeLessThan(0.25);
     }
   }
   await page.getByRole('link', { name: 'About', exact: true }).click();
@@ -259,4 +267,18 @@ test('copying a tree path still selects the filter when the Clipboard API is una
   await page.locator('[data-json-node="$/name"] .text-sky-600').click();
   await expect(page.getByLabel('JQ Filter', { exact: true })).toHaveValue('.name');
   await expect(page.getByRole('alert')).toContainText('clipboard');
+});
+
+test('navigation matches the live tab order and restores the saved tab without its content', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('navigation').nth(1).getByRole('button')).toHaveText([
+    'JSON Tools', 'Data Converter', 'Regex Tester', 'Diff Master', 'Smart Converter', 'Time Converter', 'List Wizard',
+  ]);
+  await expect(page.getByRole('heading', { name: 'JSON Tools', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Regex Tester', exact: true }).click();
+  await page.getByLabel('Test Text').fill('session-only text');
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Regex Tester', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Test Text')).toBeEmpty();
+  expect(await page.evaluate(() => localStorage.getItem('tooly.activeTab.v1'))).toBe('regex');
 });

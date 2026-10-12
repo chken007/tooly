@@ -1,20 +1,5 @@
 import { memo, type MouseEvent, type ReactNode } from 'react';
-
-export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
-
-export function toJqPath(path: string) {
-  return path === '' ? '.' : path.startsWith('[') ? path : `.${path}`;
-}
-
-export function childNodeId(parent: string, key: string) {
-  return `${parent}/${key.replace(/~/g, '~0').replace(/\//g, '~1')}`;
-}
-
-export function matchesJsonSearch(key: string, value: JsonValue, query: string): boolean {
-  if (!query) return false;
-  return key.toLowerCase().includes(query) ||
-    ((value === null || typeof value !== 'object') && String(value).toLowerCase().includes(query));
-}
+import { childNodeId, matchesJsonSearch, type JsonValue } from '../utils/jsonWorkspace';
 
 interface JsonTreeProps {
   value: JsonValue;

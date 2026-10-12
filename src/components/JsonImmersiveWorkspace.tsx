@@ -1,12 +1,7 @@
 import { useCallback, useState, type ReactNode, type RefObject } from 'react';
 import { useJsonTree } from '../hooks/useJsonTree';
 import { JsonSearch, JsonTreeView } from './JsonTreeView';
-import { toJqPath } from './JsonTree';
-
-export type ImmersiveLayout = 'single' | 'columns' | 'rows' | 'grid';
-
-export const immersivePaneCount = (layout: ImmersiveLayout) =>
-  layout === 'single' ? 1 : layout === 'grid' ? 4 : 2;
+import { toJqPath, immersivePaneCount, type ImmersiveLayout } from '../utils/jsonWorkspace';
 
 const layouts: { id: ImmersiveLayout; label: string; grid: string }[] = [
   { id: 'single', label: 'Single pane', grid: 'grid-cols-1 grid-rows-1' },

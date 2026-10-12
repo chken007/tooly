@@ -5,15 +5,24 @@ import TextDiffTool from './components/TextDiffTool';
 import ListWizard from './components/ListWizard';
 import TimeConverter from './components/TimeConverter';
 import JsonTools from './components/JsonTools';
+import DataConverter from './components/DataConverter';
+import RegexTester from './components/RegexTester';
 import About from './components/About';
-import ThemeSelector, { useTheme } from './components/ThemeSelector';
+import ThemeSelector from './components/ThemeSelector';
+import { useTheme } from './hooks/useTheme';
+import {
+  loadActiveTab,
+  saveActiveTab,
+  TAB_DEFINITIONS,
+  type TabId,
+} from './utils/tabPreference';
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/react"
 
 type EncodingType = 'base64' | 'url' | 'jwt' | 'hex' | 'unicode';
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState('converter');
+  const [activeTab, setActiveTab] = useState<TabId>(loadActiveTab);
   const [immersive, setImmersive] = useState(false);
   const theme = useTheme();
   const location = useLocation();
@@ -53,13 +62,24 @@ function AppContent() {
     jqFilter: '',
   });
 
-  const tabs = [
-    { id: 'converter', label: 'Smart Converter' },
-    { id: 'diff', label: 'Diff Master' },
-    { id: 'wizard', label: 'List Wizard' },
-    { id: 'time', label: 'Time Converter' },
-    { id: 'json', label: 'JSON Tools' }
-  ];
+  const [dataConverterState, setDataConverterState] = useState({
+    input: '',
+    output: '',
+    sourceFormat: 'json' as 'json' | 'csv' | 'yaml',
+    targetFormat: 'csv' as 'json' | 'csv' | 'yaml',
+  });
+
+  const [regexState, setRegexState] = useState({
+    pattern: '',
+    flags: 'g',
+    testText: '',
+    replacement: '',
+  });
+
+  const handleTabChange = (tabId: TabId) => {
+    saveActiveTab(tabId);
+    setActiveTab(tabId);
+  };
 
   // If we're on the about page, don't show the main app layout
   if (location.pathname === '/about') {
@@ -75,7 +95,7 @@ function AppContent() {
     <div className="min-h-screen bg-stone-50">
       {/* Header */}
       {!immersive && <header className="bg-white/80 backdrop-blur-sm border-b border-stone-200 sticky top-0 z-50">
-        <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               {/* Logo */}
@@ -103,14 +123,14 @@ function AppContent() {
       </header>}
 
       {/* Tab Navigation */}
-      {!immersive && <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="border-b border-stone-200">
-          <nav className="-mb-px flex space-x-1 sm:space-x-6 overflow-x-auto">
-            {tabs.map((tab) => (
+      {!immersive && <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <div className="border-b border-stone-200 overflow-x-auto sm:overflow-visible">
+          <nav className="-mb-px flex w-max min-w-full space-x-1 sm:space-x-6">
+            {TAB_DEFINITIONS.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`py-3 px-3 border-b-2 font-medium text-sm whitespace-nowrap transition-all duration-200 ${
+                onClick={() => handleTabChange(tab.id)}
+                className={`flex-shrink-0 whitespace-nowrap py-3 px-3 border-b-2 font-medium text-sm transition-all duration-200 ${
                   activeTab === tab.id
                     ? 'border-orange-500 text-orange-600'
                     : 'border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300'
@@ -124,7 +144,7 @@ function AppContent() {
       </div>}
 
       {/* Main Content */}
-      <main className={immersive ? 'h-dvh' : 'max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-6'}>
+      <main className={immersive ? 'h-dvh' : 'max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6'}>
         {activeTab === 'converter' && (
           <SmartConverter state={converterState} setState={setConverterState} />
         )}
@@ -140,11 +160,17 @@ function AppContent() {
         {activeTab === 'json' && (
           <JsonTools state={jsonState} setState={setJsonState} immersive={immersive} setImmersive={setImmersive} />
         )}
+        {activeTab === 'data' && (
+          <DataConverter state={dataConverterState} setState={setDataConverterState} />
+        )}
+        {activeTab === 'regex' && (
+          <RegexTester state={regexState} setState={setRegexState} />
+        )}
       </main>
 
       {/* Footer */}
       {!immersive && <footer className="bg-white border-t border-stone-200 mt-8">
-        <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="text-center text-sm text-stone-500">
             Have feedback? Open an issue on{' '}
             <a 

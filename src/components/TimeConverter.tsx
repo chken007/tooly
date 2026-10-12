@@ -175,7 +175,7 @@ const TimeConverter: React.FC<TimeConverterProps> = ({ state, setState }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+    <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-4 sm:p-6">
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-stone-900 mb-2 tracking-tight">Time Converter</h2>
         <p className="text-stone-500 text-sm">
@@ -338,4 +338,4 @@ Multiple timestamps (prefer new lines):
   );
 };
 
-export default TimeConverter; 
+export default TimeConverter;

@@ -1,6 +1,26 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  decodeBase64,
+  decodeHex,
+  decodeJwt,
+  decodeUnicode,
+  decodeUrl,
+  encodeBase64,
+  encodeHex,
+  encodeUnicode,
+  encodeUrl,
+} from '../utils/encoding';
+import { sortJSON } from '../utils/formatters';
+import { beautifyLooseJson } from '../utils/looseJson';
 
 type EncodingType = 'base64' | 'url' | 'jwt' | 'hex' | 'unicode';
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
 
 interface SmartConverterProps {
   state: {
@@ -26,204 +46,18 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
   const { leftText, rightText, encodingType, isHighlightMode, isSorted, isBeautified } = state;
   
   // Helper functions to update specific parts of state
-  const setLeftText = (value: string) => setState(prev => ({ ...prev, leftText: value }));
-  const setRightText = (value: string) => setState(prev => ({ ...prev, rightText: value }));
-  const setEncodingType = (value: EncodingType) => setState(prev => ({ ...prev, encodingType: value }));
-  const setIsHighlightMode = (value: boolean) => setState(prev => ({ ...prev, isHighlightMode: value }));
-  const setIsSorted = (value: boolean) => setState(prev => ({ ...prev, isSorted: value }));
-  const setIsBeautified = (value: boolean) => setState(prev => ({ ...prev, isBeautified: value }));
+  const setLeftText = useCallback((value: string) => setState(prev => ({ ...prev, leftText: value })), [setState]);
+  const setRightText = useCallback((value: string) => setState(prev => ({ ...prev, rightText: value })), [setState]);
+  const setEncodingType = useCallback((value: EncodingType) => setState(prev => ({ ...prev, encodingType: value })), [setState]);
+  const setIsHighlightMode = useCallback((value: boolean) => setState(prev => ({ ...prev, isHighlightMode: value })), [setState]);
+  const setIsSorted = useCallback((value: boolean) => setState(prev => ({ ...prev, isSorted: value })), [setState]);
+  const setIsBeautified = useCallback((value: boolean) => setState(prev => ({ ...prev, isBeautified: value })), [setState]);
   
   // Local state (not persisted across tabs)
   const [error, setError] = useState('');
   const [lastModified, setLastModified] = useState<'left' | 'right' | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<'left' | 'right' | null>(null);
   const [collapsedPaths, setCollapsedPaths] = useState<Set<string>>(new Set());
-  const highlightRef = useRef<HTMLDivElement>(null);
-
-  // Robust Base64 decoder that can handle partial invalid strings
-  const robustBase64Decode = useCallback((input: string): string => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-    let result = '';
-    let buffer = 0;
-    let bitsCollected = 0;
-    
-    for (let i = 0; i < input.length; i++) {
-      const char = input[i];
-      if (char === '=') break; // Stop at padding
-      
-      const charIndex = chars.indexOf(char);
-      if (charIndex === -1) continue; // Skip invalid characters
-      
-      buffer = (buffer << 6) | charIndex;
-      bitsCollected += 6;
-      
-      if (bitsCollected >= 8) {
-        bitsCollected -= 8;
-        const byte = (buffer >> bitsCollected) & 0xFF;
-        result += String.fromCharCode(byte);
-      }
-    }
-
-    try {
-      return decodeURIComponent(escape(result));
-    } catch {
-      return result; // Return raw result if UTF-8 decoding fails
-    }
-  }, []);
-
-  // Base64 functions - Robust implementation
-  const encodeBase64 = useCallback((text: string): string => {
-    try {
-      return btoa(unescape(encodeURIComponent(text)));
-    } catch (error) {
-      throw new Error('Failed to encode as Base64');
-    }
-  }, []);
-
-  const decodeBase64 = useCallback((text: string): string => {
-    try {
-      // Clean the input - remove whitespace and non-base64 characters
-      let cleanInput = text.replace(/[^A-Za-z0-9+/]/g, '');
-      
-      // Add padding if missing
-      while (cleanInput.length % 4) {
-        cleanInput += '=';
-      }
-
-      // Try standard atob first
-      try {
-        return decodeURIComponent(escape(atob(cleanInput)));
-      } catch {
-        // If atob fails, try manual decoding for partial recovery
-        return robustBase64Decode(cleanInput);
-      }
-    } catch (error) {
-      throw new Error('Invalid Base64 string');
-    }
-  }, [robustBase64Decode]);
-
-  // URL encoding functions
-  const encodeURL = useCallback((text: string): string => {
-    try {
-      return encodeURIComponent(text);
-    } catch (error) {
-      throw new Error('Failed to encode as URL');
-    }
-  }, []);
-
-  const decodeURL = useCallback((text: string): string => {
-    try {
-      return decodeURIComponent(text);
-    } catch (error) {
-      throw new Error('Invalid URL encoded string');
-    }
-  }, []);
-
-  // JWT functions
-  const decodeJWT = useCallback((token: string): string => {
-    try {
-      const parts = token.split('.');
-      if (parts.length !== 3) {
-        throw new Error('Invalid JWT format');
-      }
-      
-      const header = JSON.parse(decodeBase64(parts[0]));
-      const payload = JSON.parse(decodeBase64(parts[1]));
-      
-      return JSON.stringify({
-        header,
-        payload,
-        signature: parts[2]
-      });
-    } catch (error) {
-      throw new Error('Invalid JWT token');
-    }
-  }, [decodeBase64]);
-
-  // Hex/ASCII functions
-  const encodeHex = useCallback((text: string): string => {
-    try {
-      return text.split('').map(char => 
-        char.charCodeAt(0).toString(16).padStart(2, '0')
-      ).join(' ');
-    } catch (error) {
-      throw new Error('Failed to encode as Hex');
-    }
-  }, []);
-
-  const decodeHex = useCallback((hex: string): string => {
-    try {
-      const cleanHex = hex.replace(/\s+/g, '');
-      if (cleanHex.length % 2 !== 0) {
-        throw new Error('Invalid hex string length');
-      }
-      
-      let result = '';
-      for (let i = 0; i < cleanHex.length; i += 2) {
-        const hexPair = cleanHex.substr(i, 2);
-        const charCode = parseInt(hexPair, 16);
-        if (isNaN(charCode)) {
-          throw new Error('Invalid hex character');
-        }
-        result += String.fromCharCode(charCode);
-    }
-      return result;
-    } catch (error) {
-      throw new Error('Invalid hex string');
-    }
-  }, []);
-
-  // Unicode Escape functions
-  const encodeUnicode = useCallback((text: string): string => {
-    try {
-      return text.split('').map(char => {
-        const code = char.charCodeAt(0);
-        if (code > 127) {
-          return '\\u' + code.toString(16).padStart(4, '0');
-        }
-        return char;
-      }).join('');
-    } catch (error) {
-      throw new Error('Failed to encode as Unicode');
-    }
-  }, []);
-
-  const decodeUnicode = useCallback((text: string): string => {
-    try {
-      return text.replace(/\\u([0-9a-fA-F]{4})/g, (_match, code) => {
-        return String.fromCharCode(parseInt(code, 16));
-      });
-    } catch (error) {
-      throw new Error('Invalid Unicode escape string');
-    }
-  }, []);
-
-  // JSON Sort function - recursively sorts all object keys (case-sensitive, standard behavior)
-  const sortJSON = useCallback((obj: any): any => {
-    if (obj === null || obj === undefined) {
-      return obj;
-    }
-
-    // Handle arrays - recursively sort contents
-    if (Array.isArray(obj)) {
-      return obj.map(item => sortJSON(item));
-    }
-
-    // Handle objects - sort keys alphabetically (case-sensitive like standard libraries)
-    if (typeof obj === 'object') {
-      const sortedObj: any = {};
-      const keys = Object.keys(obj).sort();
-      
-      keys.forEach(key => {
-        sortedObj[key] = sortJSON(obj[key]);
-      });
-      
-      return sortedObj;
-    }
-
-    // Primitive values - return as is
-    return obj;
-  }, []);
 
   const handleSort = useCallback(() => {
     if (!rightText.trim()) {
@@ -242,10 +76,10 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
       setIsBeautified(true);
       setIsHighlightMode(false); // Exit highlight mode
       setLastModified('right');
-    } catch (err) {
+    } catch {
       setError('Cannot sort: Invalid JSON format');
     }
-  }, [rightText, sortJSON]);
+  }, [rightText, setIsBeautified, setIsHighlightMode, setIsSorted, setRightText]);
 
   const handleBeautify = useCallback(() => {
     if (!rightText.trim()) {
@@ -254,136 +88,18 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
     }
 
     try {
-      const trimmed = rightText.trim();
-      let beautified = trimmed;
-      let needsFormatting = true;
-      
-      // Check if content is already properly beautified JSON
-      const isAlreadyBeautifiedJSON = (() => {
-        try {
-          const parsed = JSON.parse(trimmed);
-          const standardFormat = JSON.stringify(parsed, null, 2);
-          // Compare with standard format - must match exactly
-          return trimmed === standardFormat;
-        } catch {
-          return false;
-        }
-      })();
-
-      if (isAlreadyBeautifiedJSON) {
-        // Content is already beautified in standard format
-        needsFormatting = false;
-        beautified = trimmed;
-      } else if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-      // Enhanced robust JSON beautification
-        // Try standard JSON first
-        try {
-          const parsed = JSON.parse(trimmed);
-          beautified = JSON.stringify(parsed, null, 2);
-        } catch {
-          // Apply robust fixes for common JSON issues
-          let fixed = trimmed;
-          
-          // 1. Add missing quotes around keys
-          fixed = fixed.replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, '$1"$2":');
-          
-          // 2. Fix single quotes to double quotes
-          fixed = fixed.replace(/'/g, '"');
-          
-          // 3. Remove trailing commas
-          fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
-          
-          // 4. Try to fix incomplete objects/arrays
-          let openBraces = (fixed.match(/{/g) || []).length;
-          let closeBraces = (fixed.match(/}/g) || []).length;
-          let openBrackets = (fixed.match(/\[/g) || []).length;
-          let closeBrackets = (fixed.match(/\]/g) || []).length;
-          
-          // Add missing closing braces/brackets
-          while (openBraces > closeBraces) {
-            fixed += '}';
-            closeBraces++;
-          }
-          while (openBrackets > closeBrackets) {
-            fixed += ']';
-            closeBrackets++;
-          }
-          
-          // Try to parse the fixed version
-          try {
-            const parsed = JSON.parse(fixed);
-            beautified = JSON.stringify(parsed, null, 2);
-          } catch {
-            // If still fails, try partial line-by-line processing
-            const lines = trimmed.split('\n');
-            const processedLines: string[] = [];
-            
-            for (const line of lines) {
-              const trimmedLine = line.trim();
-              
-              // Try to parse individual lines as JSON
-              try {
-                const parsed = JSON.parse(trimmedLine);
-                processedLines.push(JSON.stringify(parsed, null, 2));
-              } catch {
-                // Try to extract and beautify JSON-like patterns
-                const jsonPattern = /\{[^{}]*\}/g;
-                const matches = trimmedLine.match(jsonPattern);
-                
-                if (matches) {
-                  let processedLine = trimmedLine;
-                  for (const match of matches) {
-                    try {
-                      const parsed = JSON.parse(match);
-                      const beautifiedMatch = JSON.stringify(parsed, null, 2);
-                      processedLine = processedLine.replace(match, beautifiedMatch);
-                    } catch {
-                      // Keep original if can't parse
-                    }
-                  }
-                  processedLines.push(processedLine);
-                } else {
-                  processedLines.push(line); // Keep original line
-                }
-              }
-            }
-            
-            beautified = processedLines.join('\n');
-          }
-        }
-      } else {
-        // Try standard JSON parsing for non-obvious JSON
-        try {
-          const parsed = JSON.parse(trimmed);
-          beautified = JSON.stringify(parsed, null, 2);
-        } catch {
-          // Not JSON, keep original
-          beautified = trimmed;
-        }
-      }
-      
-      // Always update state when Beautify is clicked
-      if (needsFormatting && beautified !== trimmed) {
-        // Content was formatted
+      const beautified = beautifyLooseJson(rightText);
+      if (beautified !== rightText.trim()) {
         setRightText(beautified);
-      setError('');
-        setIsBeautified(true);
-        setIsHighlightMode(false);
         setLastModified('right');
-      } else if (!needsFormatting) {
-        // Content was already beautified, just update the button state
-        setError('');
-        setIsBeautified(true);
-        setIsHighlightMode(false);
-      } else {
-        // Could not beautify
-        setError('Content could not be beautified');
       }
-      
+      setError('');
+      setIsBeautified(true);
+      setIsHighlightMode(false);
     } catch (err) {
       setError('Failed to beautify content: ' + (err instanceof Error ? err.message : 'Unknown error'));
     }
-  }, [rightText]);
+  }, [rightText, setIsBeautified, setIsHighlightMode, setRightText]);
 
   // Toggle collapse/expand for a path and its direct children
   const toggleCollapse = useCallback((path: string, obj: any) => {
@@ -534,17 +250,15 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
     }
 
     // Check if it's valid JSON first
-    let isValidJSON = false;
-    let parsedData: any = null;
-    
-    try {
-      parsedData = JSON.parse(jsonString);
-      isValidJSON = true;
-    } catch {
-      isValidJSON = false;
-    }
+    const parsedData: any = (() => {
+      try {
+        return JSON.parse(jsonString);
+      } catch {
+        return null;
+      }
+    })();
 
-    if (isValidJSON && parsedData && (typeof parsedData === 'object')) {
+    if (parsedData && typeof parsedData === 'object') {
       // Valid JSON - render with collapsible structure
       return (
         <div className="whitespace-pre-wrap font-mono text-sm">
@@ -555,7 +269,7 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
       // Invalid JSON - fall back to simple syntax highlighting
       const lines = jsonString.split('\n');
       const highlightedLines = lines.map((line, index) => {
-        let highlighted = line
+        const highlighted = escapeHtml(line)
           // Highlight quoted strings (both valid and invalid)
           .replace(/"([^"]*)":/g, '<span class="text-orange-500 font-semibold">"$1"</span>:')
           .replace(/:\s*"([^"]*)"/g, ': <span class="text-green-600">"$1"</span>')
@@ -600,9 +314,9 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
         if (encodingType === 'base64') {
           result = decodeBase64(leftText);
         } else if (encodingType === 'url') {
-          result = decodeURL(leftText);
+          result = decodeUrl(leftText);
         } else if (encodingType === 'jwt') {
-          result = decodeJWT(leftText);
+          result = decodeJwt(leftText);
         } else if (encodingType === 'hex') {
           result = decodeHex(leftText);
         } else if (encodingType === 'unicode') {
@@ -623,7 +337,7 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
         if (encodingType === 'base64') {
           result = encodeBase64(rightText);
         } else if (encodingType === 'url') {
-          result = encodeURL(rightText);
+          result = encodeUrl(rightText);
         } else if (encodingType === 'jwt') {
           // JWT is decode-only, can't encode plain text to JWT
           throw new Error('JWT encoding not supported - JWT is decode-only');
@@ -650,15 +364,8 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
     rightText, 
     encodingType, 
     lastModified, 
-    encodeBase64, 
-    decodeBase64, 
-    decodeJWT, 
-    encodeURL, 
-    decodeURL, 
-    encodeHex, 
-    decodeHex, 
-    encodeUnicode, 
-    decodeUnicode
+    setLeftText,
+    setRightText,
   ]);
 
   const handleLeftTextChange = (value: string) => {
@@ -762,7 +469,7 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
     } catch {
       setError('Cannot highlight: Invalid JSON format');
     }
-  }, [rightText, isHighlightMode]);
+  }, [rightText, isHighlightMode, setIsHighlightMode]);
 
   // Convert based on which panel was last modified
 
@@ -821,7 +528,7 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
   }, [rightText]);
 
   return (
-    <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+    <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-4 sm:p-6">
       <h2 className="text-xl font-semibold text-stone-900 mb-6 tracking-tight">Smart Converter</h2>
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -1000,7 +707,6 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
               /* Highlight Mode: Read-only, collapsible, syntax highlighted */
               <div 
                 className="w-full h-[900px] p-4 border border-stone-200 rounded-xl font-mono text-sm overflow-auto bg-white"
-                ref={highlightRef}
               >
                 {highlightJSON(rightText)}
               </div>
@@ -1037,4 +743,4 @@ const SmartConverter: React.FC<SmartConverterProps> = ({ state, setState }) => {
   );
 };
 
-export default SmartConverter; 
+export default SmartConverter;

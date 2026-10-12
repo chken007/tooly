@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { childNodeId, matchesJsonSearch, type JsonValue } from '../components/JsonTree';
+import { childNodeId, matchesJsonSearch, type JsonValue } from '../utils/jsonWorkspace';
 
 type CollapsedState = Record<string, boolean>;
 

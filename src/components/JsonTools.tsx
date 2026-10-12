@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { toJqPath } from './JsonTree';
+import { toJqPath, immersivePaneCount, type ImmersiveLayout } from '../utils/jsonWorkspace';
 import { JsonSearch, JsonTreeView } from './JsonTreeView';
-import JsonImmersiveWorkspace, { immersivePaneCount, type ImmersiveLayout } from './JsonImmersiveWorkspace';
+import JsonImmersiveWorkspace from './JsonImmersiveWorkspace';
 import { useBrowserPreference } from '../hooks/useBrowserPreference';
 import { useJsonTree } from '../hooks/useJsonTree';
+import { applyJqFilter } from '../utils/jq';
 
 interface JsonToolsProps {
   immersive: boolean;
@@ -30,7 +31,7 @@ const JsonTools: React.FC<JsonToolsProps> = ({ state, setState, immersive, setIm
   const [layout, setLayout] = useState<ImmersiveLayout>('single');
   const tree = useJsonTree(jsonInput, `${immersive}:${layout}`);
   const { parsedJson, error, setError, expandAll, collapseAll, searchRef } = tree;
-  const [filteredResult, setFilteredResult] = useState<any>(null);
+  const [filteredResult, setFilteredResult] = useState<unknown>(null);
   const [filterError, setFilterError] = useState<string>('');
   const [copyFeedback, setCopyFeedback] = useState<'input' | 'tree' | 'filter' | null>(null);
   const [clipboardError, setClipboardError] = useState('');
@@ -81,20 +82,16 @@ const JsonTools: React.FC<JsonToolsProps> = ({ state, setState, immersive, setIm
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
-  // Stable ref for filter setter
-  const setJqFilterRef = useRef(setJqFilter);
-  setJqFilterRef.current = setJqFilter;
-
   const copyPath = useCallback(async (path: string) => {
     const jqPath = toJqPath(path);
-    setJqFilterRef.current(jqPath);
+    setState(previous => ({ ...previous, jqFilter: jqPath }));
     try {
       await navigator.clipboard.writeText(jqPath);
       setClipboardError('');
     } catch (err) {
       setClipboardError(`Could not copy to clipboard: ${err instanceof Error ? err.message : String(err)}`);
     }
-  }, []);
+  }, [setState]);
 
   // Improved JQ filter parser that handles .key[].subkey patterns
   const applyFilter = useCallback(() => {
@@ -107,15 +104,7 @@ const JsonTools: React.FC<JsonToolsProps> = ({ state, setState, immersive, setIm
     try {
       const filter = jqFilter.trim();
       
-      // Split by pipe for chaining
-      const pipeParts = filter.split('|').map(p => p.trim());
-      let result: any = parsedJson;
-
-      for (const pipePart of pipeParts) {
-        if (!pipePart || pipePart === '.') continue;
-        result = evaluateJqExpression(result, pipePart);
-      }
-
+      const result = applyJqFilter(parsedJson, filter);
       setFilteredResult(result);
       setFilterError('');
     } catch (err) {
@@ -123,132 +112,6 @@ const JsonTools: React.FC<JsonToolsProps> = ({ state, setState, immersive, setIm
       setFilterError(err instanceof Error ? err.message : 'Filter error');
     }
   }, [parsedJson, jqFilter]);
-
-  // Tokenize and evaluate JQ expression
-  const evaluateJqExpression = (data: any, expr: string): any => {
-    if (data === null || data === undefined) {
-      throw new Error('Cannot filter null/undefined');
-    }
-
-    // Handle special functions
-    if (expr === 'keys') {
-      if (typeof data !== 'object' || data === null) throw new Error('Cannot get keys of non-object');
-      return Array.isArray(data) ? data.map((_, i) => i) : Object.keys(data);
-    }
-    if (expr === 'length') {
-      if (Array.isArray(data)) return data.length;
-      if (typeof data === 'object' && data !== null) return Object.keys(data).length;
-      if (typeof data === 'string') return data.length;
-      throw new Error('Cannot get length');
-    }
-    if (expr === 'type') {
-      if (data === null) return 'null';
-      if (Array.isArray(data)) return 'array';
-      return typeof data;
-    }
-    if (expr === '.[]') {
-      if (!Array.isArray(data)) throw new Error('Cannot iterate non-array');
-      return data;
-    }
-
-    // Tokenize the expression: split into path segments
-    // Handle patterns like: .key1.key2[].subkey or .key[0].subkey
-    if (!expr.startsWith('.')) {
-      throw new Error(`Invalid expression: ${expr}`);
-    }
-
-    const tokens = tokenizeJqPath(expr.slice(1)); // Remove leading dot
-    return evaluateTokens(data, tokens);
-  };
-
-  // Tokenize a JQ path into segments
-  const tokenizeJqPath = (path: string): string[] => {
-    const tokens: string[] = [];
-    let current = '';
-    let i = 0;
-
-    while (i < path.length) {
-      const char = path[i];
-
-      if (char === '.') {
-        if (current) tokens.push(current);
-        current = '';
-        i++;
-      } else if (char === '[') {
-        if (current) tokens.push(current);
-        current = '';
-        // Find matching ]
-        let bracketContent = '';
-        i++; // skip [
-        while (i < path.length && path[i] !== ']') {
-          bracketContent += path[i];
-          i++;
-        }
-        i++; // skip ]
-        tokens.push(`[${bracketContent}]`);
-      } else {
-        current += char;
-        i++;
-      }
-    }
-
-    if (current) tokens.push(current);
-    return tokens;
-  };
-
-  // Evaluate tokens against data
-  const evaluateTokens = (data: any, tokens: string[]): any => {
-    let result = data;
-
-    for (let i = 0; i < tokens.length; i++) {
-      const token = tokens[i];
-
-      if (result === null || result === undefined) {
-        throw new Error('Cannot access property of null/undefined');
-      }
-
-      // Array iteration: []
-      if (token === '[]') {
-        if (!Array.isArray(result)) {
-          throw new Error('Cannot iterate non-array');
-        }
-        // If there are more tokens, map each element through remaining tokens
-        const remainingTokens = tokens.slice(i + 1);
-        if (remainingTokens.length > 0) {
-          return result.map(item => evaluateTokens(item, remainingTokens));
-        }
-        return result;
-      }
-
-      // Array index: [0], [1], etc.
-      const indexMatch = token.match(/^\[(\d+)\]$/);
-      if (indexMatch) {
-        const idx = parseInt(indexMatch[1], 10);
-        if (!Array.isArray(result)) {
-          throw new Error('Cannot index non-array');
-        }
-        if (idx >= result.length) {
-          throw new Error(`Index ${idx} out of bounds`);
-        }
-        result = result[idx];
-        continue;
-      }
-
-      // Object key
-      if (typeof result !== 'object' || result === null) {
-        throw new Error(`Cannot access "${token}" on non-object`);
-      }
-      if (Array.isArray(result)) {
-        throw new Error(`Cannot access key "${token}" on array - use index [n] instead`);
-      }
-      if (!(token in result)) {
-        throw new Error(`Key "${token}" not found`);
-      }
-      result = result[token];
-    }
-
-    return result;
-  };
 
   const handleCopy = async (text: string, type: 'input' | 'tree' | 'filter') => {
     try {
@@ -321,7 +184,7 @@ const JsonTools: React.FC<JsonToolsProps> = ({ state, setState, immersive, setIm
           </>
         ) : null}
       />
-      {!immersive && <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+      {!immersive && <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-4 sm:p-6">
       <div className="flex items-center justify-between gap-3 mb-6">
         <h2 className="text-xl font-semibold text-stone-900 tracking-tight">JSON Tools</h2>
         <button ref={immersiveButtonRef} onClick={() => setImmersive(true)} className="btn-secondary text-sm" title="Show only Paste, search and tree. Escape exits.">
