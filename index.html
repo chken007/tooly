@@ -9,6 +9,19 @@
     <link rel="apple-touch-icon" href="/tooly-icon.svg?v=20250528" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f97316" />
+    <script>
+      try {
+        const theme = JSON.parse(localStorage.getItem('tooly.theme') || '"auto"');
+        const dark = theme === 'dark' || (theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.classList.toggle('dark', dark);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      } catch (error) {
+        console.warn('Unable to load browser theme preference.', error);
+        const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.classList.toggle('dark', dark);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      }
+    </script>
     
     <!-- Primary Meta Tags -->
     <title>Tooly - Free JSON Formatter, Base64 Decoder, JWT Tool & More | No Ads Developer Tools</title>
@@ -107,4 +120,3 @@
     <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>
-

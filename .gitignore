@@ -220,6 +220,8 @@ es/
 # Test coverage
 coverage/
 .nyc_output/
+test-results/
+playwright-report/
 
 # Storybook build outputs
 storybook-static/
