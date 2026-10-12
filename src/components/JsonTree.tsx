@@ -2,6 +2,10 @@ import { memo, type MouseEvent, type ReactNode } from 'react';
 
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 
+export function toJqPath(path: string) {
+  return path === '' ? '.' : path.startsWith('[') ? path : `.${path}`;
+}
+
 export function childNodeId(parent: string, key: string) {
   return `${parent}/${key.replace(/~/g, '~0').replace(/\//g, '~1')}`;
 }

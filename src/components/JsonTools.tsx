@@ -1,6 +1,9 @@
-import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import JsonTree, { childNodeId, matchesJsonSearch, type JsonValue } from './JsonTree';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { toJqPath } from './JsonTree';
+import { JsonSearch, JsonTreeView } from './JsonTreeView';
+import JsonImmersiveWorkspace, { immersivePaneCount, type ImmersiveLayout } from './JsonImmersiveWorkspace';
 import { useBrowserPreference } from '../hooks/useBrowserPreference';
+import { useJsonTree } from '../hooks/useJsonTree';
 
 interface JsonToolsProps {
   immersive: boolean;
@@ -15,9 +18,6 @@ interface JsonToolsProps {
   }>>;
 }
 
-// Use object for collapsed state to avoid Set reference issues
-type CollapsedState = Record<string, boolean>;
-
 const isPaneWidth = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value) && value >= 20 && value <= 80;
 
@@ -27,81 +27,39 @@ const JsonTools: React.FC<JsonToolsProps> = ({ state, setState, immersive, setIm
   const setJsonInput = (value: string) => setState(prev => ({ ...prev, jsonInput: value }));
   const setJqFilter = (value: string) => setState(prev => ({ ...prev, jqFilter: value }));
   
-  const [error, setError] = useState<string>('');
-  const [parsedJson, setParsedJson] = useState<JsonValue | undefined>(undefined);
+  const [layout, setLayout] = useState<ImmersiveLayout>('single');
+  const tree = useJsonTree(jsonInput, `${immersive}:${layout}`);
+  const { parsedJson, error, setError, expandAll, collapseAll, searchRef } = tree;
   const [filteredResult, setFilteredResult] = useState<any>(null);
   const [filterError, setFilterError] = useState<string>('');
-  const [collapsedPaths, setCollapsedPaths] = useState<CollapsedState>({});
   const [copyFeedback, setCopyFeedback] = useState<'input' | 'tree' | 'filter' | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [activeMatch, setActiveMatch] = useState(-1);
   const [clipboardError, setClipboardError] = useState('');
   const [paneWidth, setPaneWidth, preferenceError] = useBrowserPreference('tooly.jsonPaneWidth', 50, isPaneWidth);
   const panesRef = useRef<HTMLDivElement>(null);
-  const treeRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const activePaneRef = useRef(0);
   const immersiveButtonRef = useRef<HTMLButtonElement>(null);
   const dragRef = useRef<{ pointerId: number; width: number } | null>(null);
 
-  const searchMatches = useMemo(() => {
-    const matches: { nodeId: string; ancestors: string[] }[] = [];
-    const query = searchTerm.toLowerCase();
-    if (!query || parsedJson === undefined) return matches;
-    const collect = (value: JsonValue, key: string, nodeId: string, ancestors: string[]) => {
-      if (matchesJsonSearch(key, value, query)) matches.push({ nodeId, ancestors });
-      if (value !== null && typeof value === 'object') {
-        for (const [childKey, child] of Object.entries(value)) {
-          collect(child, Array.isArray(value) ? '' : childKey, childNodeId(nodeId, childKey), [...ancestors, nodeId]);
-        }
-      }
-    };
-    collect(parsedJson, '', '$', []);
-    return matches;
-  }, [parsedJson, searchTerm]);
-
-  const activeNodeId = searchMatches[activeMatch]?.nodeId;
-
-  const navigateSearch = (backwards = false) => {
-    if (searchMatches.length === 0) return;
-    const next = activeMatch < 0
-      ? backwards ? searchMatches.length - 1 : 0
-      : (activeMatch + (backwards ? -1 : 1) + searchMatches.length) % searchMatches.length;
-    setActiveMatch(next);
-    setCollapsedPaths(previous => {
-      const expanded = { ...previous };
-      for (const ancestor of searchMatches[next].ancestors) delete expanded[ancestor];
-      return expanded;
-    });
-  };
-
   useEffect(() => {
-    const tree = treeRef.current;
-    const active = tree?.querySelector<HTMLElement>('[data-search-active="true"]');
-    if (!tree || !active) return;
-    const bounds = active.getBoundingClientRect();
-    const treeBounds = tree.getBoundingClientRect();
-    // Scroll only the tree, keeping the search field and surrounding page stationary.
-    tree.scrollTop += bounds.top - treeBounds.top - (tree.clientHeight - bounds.height) / 2;
-    if (bounds.left < treeBounds.left || bounds.right > treeBounds.right) {
-      tree.scrollLeft += bounds.left - treeBounds.left - 16;
-    }
-  }, [activeNodeId, collapsedPaths, immersive]);
-
-  useEffect(() => {
+    const currentSearch = () => immersive
+      ? workspaceRef.current?.querySelector<HTMLInputElement>(`[data-pane-index="${activePaneRef.current}"] input[type="search"]`)
+      : searchRef.current;
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && immersive) {
+        event.preventDefault();
         setImmersive(false);
         requestAnimationFrame(() => immersiveButtonRef.current?.focus());
       } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'f') {
         event.preventDefault();
-        searchRef.current?.focus();
-        searchRef.current?.select();
+        currentSearch()?.focus();
+        currentSearch()?.select();
       }
     };
     window.addEventListener('keydown', handleKey);
-    if (immersive) searchRef.current?.focus();
+    if (immersive) currentSearch()?.focus();
     return () => window.removeEventListener('keydown', handleKey);
-  }, [immersive, setImmersive]);
+  }, [immersive, setImmersive, searchRef]);
 
   const updatePaneWidth = (width: number) => setPaneWidth(Math.max(20, Math.min(80, Math.round(width))));
   const resizePanes = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -123,68 +81,12 @@ const JsonTools: React.FC<JsonToolsProps> = ({ state, setState, immersive, setIm
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
-  // Parse JSON input with debounce
-  const parseJsonInput = useCallback(() => {
-    if (!jsonInput.trim()) {
-      setParsedJson(undefined);
-      setError('');
-      setActiveMatch(-1);
-      return;
-    }
-    try {
-      const parsed = JSON.parse(jsonInput.trim());
-      setParsedJson(parsed);
-      setError('');
-      setCollapsedPaths({});
-      setActiveMatch(-1);
-    } catch (err) {
-      setParsedJson(undefined);
-      setError(err instanceof Error ? err.message : 'Invalid JSON');
-      setActiveMatch(-1);
-    }
-  }, [jsonInput]);
-
-  React.useEffect(() => {
-    const timer = setTimeout(parseJsonInput, 200);
-    return () => clearTimeout(timer);
-  }, [jsonInput, parseJsonInput]);
-
-  // Stable callback for checking collapsed state
-  const getIsCollapsed = useCallback((path: string): boolean => {
-    return collapsedPaths[path] === true;
-  }, [collapsedPaths]);
-
-  // Toggle collapse with minimal state updates
-  const toggleCollapse = useCallback((path: string) => {
-    setCollapsedPaths(prev => ({
-      ...prev,
-      [path]: !prev[path]
-    }));
-  }, []);
-
-  const expandAll = useCallback(() => {
-    setCollapsedPaths({});
-  }, []);
-
-  const collapseAll = useCallback(() => {
-    if (parsedJson === undefined) return;
-    const paths: CollapsedState = {};
-    const collect = (obj: JsonValue, nodeId: string) => {
-      if (typeof obj === 'object' && obj !== null && Object.keys(obj).length > 0) {
-        paths[nodeId] = true;
-        for (const [key, child] of Object.entries(obj)) collect(child, childNodeId(nodeId, key));
-      }
-    };
-    collect(parsedJson, '$');
-    setCollapsedPaths(paths);
-  }, [parsedJson]);
-
   // Stable ref for filter setter
   const setJqFilterRef = useRef(setJqFilter);
   setJqFilterRef.current = setJqFilter;
 
   const copyPath = useCallback(async (path: string) => {
-    const jqPath = path === '' ? '.' : (path.startsWith('[') ? path : `.${path}`);
+    const jqPath = toJqPath(path);
     setJqFilterRef.current(jqPath);
     try {
       await navigator.clipboard.writeText(jqPath);
@@ -382,102 +284,44 @@ const JsonTools: React.FC<JsonToolsProps> = ({ state, setState, immersive, setIm
   const handleClear = () => {
     setJsonInput('');
     setJqFilter('');
-    setParsedJson(undefined);
+    tree.clearTree();
     setFilteredResult(null);
-    setError('');
     setFilterError('');
-    setCollapsedPaths({});
-    setSearchTerm('');
-    setActiveMatch(-1);
     setClipboardError('');
   };
 
-  const treeElement = useMemo(() => {
-    if (parsedJson === undefined) return null;
-    return (
-      <JsonTree
-        value={parsedJson}
-        searchTerm={searchTerm}
-        activeNodeId={activeNodeId}
-        onToggle={toggleCollapse}
-        onCopyPath={copyPath}
-        getIsCollapsed={getIsCollapsed}
-      />
-    );
-  }, [parsedJson, searchTerm, activeNodeId, toggleCollapse, copyPath, getIsCollapsed]);
-
-  const searchBox = (
-    <div className="relative min-w-0 flex-1">
-      <input
-        ref={searchRef}
-        type="search"
-        aria-label="Search JSON tree"
-        value={searchTerm}
-        onChange={event => {
-          setSearchTerm(event.target.value);
-          setActiveMatch(-1);
-        }}
-        onKeyDown={event => {
-          if (event.key === 'Enter') {
-            event.preventDefault();
-            navigateSearch(event.shiftKey);
-          }
-        }}
-        className="w-full pl-3 pr-24 py-2 border border-stone-200 rounded-lg focus-ring text-sm"
-        placeholder="Search keys or values..."
-        title="Enter: next result. Shift+Enter: previous. Cmd/Ctrl+F: focus search."
-      />
-      <span
-        role="status"
-        aria-label="Search results"
-        className="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-xs text-stone-500"
-      >
-        {activeMatch < 0 ? 0 : activeMatch + 1} of {searchMatches.length}
-      </span>
-    </div>
-  );
-
-  const treeView = (
-    <div
-      ref={treeRef}
-      role="region"
-      aria-label="JSON tree"
-      className={`w-full p-4 border border-stone-200 rounded-xl bg-stone-50 overflow-auto font-mono text-sm ${
-        immersive ? 'flex-1 min-h-0' : 'h-[460px]'
-      }`}
-    >
-      {immersive && error && <div role="alert" className="mb-3 text-red-600">{error}</div>}
-      {parsedJson !== undefined ? (
-        <div className="whitespace-pre-wrap break-words">{treeElement}</div>
-      ) : (
-        <div className="text-stone-400 text-center py-20">
-          {jsonInput.trim() ? 'Waiting for valid JSON...' : 'Tree view will appear here'}
-        </div>
-      )}
-    </div>
-  );
+  const searchBox = <JsonSearch tree={tree} />;
+  const treeView = <JsonTreeView tree={tree} immersive={immersive} onCopyPath={copyPath} />;
 
   const notices = (clipboardError || preferenceError) && (
     <div role="alert" className="mb-3 text-sm text-red-600">{clipboardError || preferenceError}</div>
   );
 
-  if (immersive) {
-    return (
-      <div className="h-full flex flex-col gap-3 p-4 bg-white">
-        <div className="flex gap-3">
-          <button onClick={handlePaste} className="btn-primary text-sm" title="Paste JSON from clipboard. Press Escape to exit immersive view.">
-            Paste
-          </button>
-          {searchBox}
-        </div>
-        {notices}
-        {treeView}
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
+    <>
+      <JsonImmersiveWorkspace
+        immersive={immersive}
+        layout={layout}
+        onLayoutChange={next => {
+          setLayout(next);
+          if (activePaneRef.current >= immersivePaneCount(next)) activePaneRef.current = 0;
+        }}
+        onActivePane={index => { activePaneRef.current = index; }}
+        workspaceRef={workspaceRef}
+        primaryPane={immersive ? (
+          <>
+            <div className="flex flex-wrap gap-3">
+              <button onClick={handlePaste} className="btn-primary text-sm" title="Paste JSON from clipboard. Press Escape to exit immersive view.">
+                Paste
+              </button>
+              {searchBox}
+            </div>
+            {notices}
+            {treeView}
+          </>
+        ) : null}
+      />
+      {!immersive && <div className="bg-white rounded-xl border border-stone-200 shadow-sm p-6">
       <div className="flex items-center justify-between gap-3 mb-6">
         <h2 className="text-xl font-semibold text-stone-900 tracking-tight">JSON Tools</h2>
         <button ref={immersiveButtonRef} onClick={() => setImmersive(true)} className="btn-secondary text-sm" title="Show only Paste, search and tree. Escape exits.">
@@ -646,7 +490,8 @@ const JsonTools: React.FC<JsonToolsProps> = ({ state, setState, immersive, setIm
       <div className="mt-6 text-sm text-stone-600 text-center font-medium bg-orange-50 p-3 rounded-lg border border-orange-100">
         Paste JSON to see interactive tree view. Use search to find keys/values. Click paths to copy, then apply JQ filters.
       </div>
-    </div>
+      </div>}
+    </>
   );
 };
 

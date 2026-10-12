@@ -135,14 +135,15 @@ test('mobile JSON panes stack without a draggable divider', async ({ page }) => 
   expect(tree!.y).toBeGreaterThan(input!.y + input!.height);
 });
 
-test('immersive mode has only Paste, search and tree, and Escape restores the editor', async ({ page, context }) => {
+test('immersive single pane keeps Paste, search and tree, and Escape restores the editor', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await openJson(page, { existing: 'needle' });
   await page.getByRole('button', { name: 'Immersive view' }).click();
   await expect(page.getByRole('banner')).toHaveCount(0);
   await expect(page.getByLabel('JSON Input', { exact: true })).toHaveCount(0);
   await expect(page.getByLabel('JQ Filter', { exact: true })).toHaveCount(0);
-  await expect(page.getByRole('button')).toHaveCount(2); // Paste and root tree expander.
+  await expect(page.getByRole('toolbar', { name: 'Immersive layout' }).getByRole('button')).toHaveCount(4);
+  await expect(page.getByRole('button', { name: 'Paste', exact: true })).toHaveCount(1);
   await page.evaluate(() => navigator.clipboard.writeText('{"pasted":"needle","other":"needle"}'));
   await page.getByRole('button', { name: 'Paste', exact: true }).click();
   await expect(page.getByRole('region', { name: 'JSON tree' })).toContainText('"pasted"');
